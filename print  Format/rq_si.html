@@ -1,0 +1,240 @@
+{%- macro add_header(page_num, max_pages, doc, letter_head, no_letterhead) -%}
+{% if letter_head and not no_letterhead %}
+<div class="letter-head">{{ letter_head }}</div>
+{% endif %}
+{%- endmacro -%}
+
+{% set temp_num = [1] %}
+{{ add_header(temp_num[0],layout|len,doc,letter_head, no_letterhead) }}
+
+<style>
+    div.foo {
+        position: fixed;
+        bottom: 0px;
+    }
+   
+</style>
+<br>
+<br>
+<br>
+
+<div style="width:100%">
+    <div class="text-right" style="width:60%;float: left;">
+        <h4 style="margin: 0px;">{{ _("TAX INVOICE فاتورة ضريبيه") }}</h4>
+    </div>
+
+    <div style="width:40%;float: right;">
+        <p class="text-right">{{ _("Page{0} of {1}").format(temp_num[0], layout|len) }}</p>
+    </div>
+</div>
+
+
+<table class="table-border-show" style="width:100%; line-height: 14px;">
+    <tr>
+        <td style="width:70%">
+            <p style="text-align:left; font-size:120%">
+                <u>Customer name : </u><b>{{doc.customer_name}}</b><br>
+                <span style="float:right;font-size:120%">
+                    <u>اسم العميل </u>: {{doc.get_formatted("customer_name_in_arabic")}}</b></span>
+            </p>
+        </td>
+
+        <td>
+            <p style="text-align:left;"><u>Invoice Date &nbsp:</u> &nbsp<b>{{doc.posting_date}}</b>
+                <span style="float:right;"> التاريخ الفاتورة </span>
+            </p>
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+            <p style="text-align:left;">
+                <u>Customer Address (العنوان العميل)</u>: {{frappe.db.get_value("Address", doc.customer_address,
+                "address_line1")}}
+            </p>
+        </td>
+
+        <td>
+            <p style="text-align:left; font-size:120%"><u>Invoice No &nbsp:</u> &nbsp<b>{{doc.name}}</b>
+                <span style="float:right;"> رقم الفاتورة </span>
+            </p>
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+            <p style="text-align:left; font-size:120%"><u>Customer VAT No : </u><b>{{doc.tax_id}}</b>
+                <span style="float:right;"><b><u>رقم الضريبة العميل</u> : {{doc.vat_number_in_arabic}}</b></span>
+            </p>
+        </td>
+
+        <td>
+            <p style="text-align:left;"><b><u>PO No :</u> &nbsp{{ doc.get_formatted("customer_purchase_order") }}</b>
+                <span style="float:right;"><b><u> رقم أمر شراع </b></u></span>
+            </p>
+        </td>
+    </tr>
+</table>
+
+<div style="height:600px;">
+<table class="table table-border-hide table-condensed table-hover table-bordered" style="margin: 10px 0px;">
+    <tr>
+        <th align="center" valign="middle" height="38">
+            Sr.No<br>رقم التسلسل
+        </th>
+
+        <th style="width:45%;" valign="middle">
+            <p align="center">Item Name<br>رمز الصنف</p>
+        </th>
+
+        <th align="center" valign="middle">
+            UOM<br>وحدة القياس
+        </th>
+
+        <th align="center" valign="middle">
+            Qty<br>كمية
+        </th>
+
+        <th align="center" valign="middle">Rate<br>معدل</th>
+
+        <th align="center" valign="middle">Amount<br>كمية</th>
+
+        <th align="right" valign="middle">VAT%<br> ضريبه</th>
+        <th align="right" valign="middle">VAT Amount<br>قيمة الضريبة</th>
+        <th align="center" valign="middle">Total Amount<br>الاجمالي</th>
+    </tr>
+
+    {% set count = [] %}
+
+    {%- for items in doc.items -%}
+    {%- if not items.associated_item -%}
+    {% set __ = count.append(1) %}
+    <tr style="height: 0px;">
+        <td align="center" valign="middle" height="25">{{ count|length }}</td>
+        {%- endif %}
+        <td align="left" valign="middle">{{ items.item_name }}</br>{{ items.item_name_in_arabic}}</td>
+        <td align="center" valign="middle">{{ items.uom }}</td>
+        <td align="center" valign="middle">{{ items.qty }}</td>
+        <td align="center" valign="middle">{{ items.get_formatted("rate") }}</td>
+        <td align="center" valign="middle">{{ items.get_formatted("amount") }}</td>
+        <td align="right" valign="middle">{{ items.tax_rate }}</td>
+        <td align="right" valign="middle">{{ items.get_formatted("tax_amount") }}</td>
+        <td align="right" valign="middle">
+            <p>{{ items.get_formatted("total_amount") }}</p>
+        </td>
+    </tr>
+
+    {% if items.page_break -%}
+</table>
+{% if temp_num[0] % 2 != 1 %}
+    </div>
+    <div class="page-break"></div>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <div style="height:730px;">
+{% else %}
+
+    {% if temp_num[0] == 1 %}
+        </div>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <div style="height:600px;">
+    {% elif temp_num[0] > 2 %}
+        </div>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <div style="height:500px;">
+    {% endif %}
+{% endif %}
+
+{% set __ = temp_num.append(temp_num.pop() +1)%}
+{{ add_header(temp_num[0],layout|len,doc,letter_head, no_letterhead) }}
+
+<div style="margin-bottom: -20px;">
+    <p class="text-right">{{ _("Page{0} of {1}").format(temp_num[0], layout|len) }}</p>
+</div>
+
+<table class="table table-condensed table-hover table-bordered">
+    <tr>
+        <th align="center" valign="middle" height="38">Sr.No<br>الأب رقم</th>
+        <th style="width:45%; " valign="
+                middle">
+            <p align="center">Item Name<br>رمز الصنف</p>
+        </th>
+
+        <th align="center" valign="middle">UOM<br>وحدة القياس</th>
+
+        <th align="center" valign="middle">Qty<br>كمية</th>
+
+        <th align="center" valign="middle">Rate<br>معدل</th>
+
+        <th align="center" valign="middle">Amount<br>كمية</th>
+
+        <th align="right" valign="middle">VAT%<br>برميل
+        </th>
+        <th align="right" valign="middle">VAT Amount<br>قيمة الضريبة
+        </th>
+        <th align="center" valign="middle">Total Amount<br>الاجمالي
+        </th>
+    </tr>
+    {%- endif %}
+    {%- endfor -%}
+
+</table>
+
+
+<table class="table-border-show" style="width:100%;">
+    <tr>
+        <td style="width:25%"><br>توقيع المستلم <br>Receiver Sign.<br><br> <br>توقيع المندوب <br> Salesman Sign.<br>
+        </td>
+        <td style="width:50%">
+            <p align="center">Total in Words <br><b>{{doc.in_words}}</b><br>
+            <b style="font-size: 15px;">{%if doc.amount_in_words_arebic %}{{doc.amount_in_words_arebic}}{% endif %}</b></p>
+            
+           
+            <font color="red">
+                    <div style="border-top: 1px solid black;margin-top: 58px;">
+                <p align="center" style="font-size:8px;"><b>( لأصدار شيك نأمل أن يكون باسم ( مؤسسة المتألق الراقية <br>Issue
+                        Cheques on M.Raqiya Establishment </b></p>
+                    </div>
+                    </font>
+            
+        </td>
+
+        <td style="width:13%">
+            <p align="center">الاجمالي بدون الضريبة<br>Total Excl vat<br>_______________________<br>
+                الضريبة <br> Vat<br>_______________________<br> الاجمالي <br>Total Invoice Value</p>
+        </td>
+        <td style="width:12%">
+                <p align="right">
+                        <b>
+                        <font size="2" style="font-size: 15px;">{%if doc.total_excluding_vat_in_arebic %}{{ doc.total_excluding_vat_in_arebic }}{% endif %}</font>
+                        </b><br>
+                    <b>
+                        <font size="2">{{doc.get_formatted("total") }}</font>
+                    </b><br>________________________<br>
+                    <b>
+                            <font size="2" style="font-size: 15px; ">{%if doc.vat_in_arebic %}{{doc.vat_in_arebic}}{% endif %}</font>
+                        </b><br>
+                    <b>
+                        <font size="2">{{doc.get_formatted("total_taxes_and_charges")}}</font>
+                    </b><br>________________________<br><b>
+                            <b>
+                                    <font size="2" style="font-size: 15px; ">{%if doc.grand_total_in_arabic %}{{doc.grand_total_in_arabic}}{% endif %}</font>
+                                </b><br>
+                        <font size="2">{{doc.get_formatted("grand_total") }}</font>
+                    </b></p>
+            </td>
+    </tr>
+</table>
+</div>

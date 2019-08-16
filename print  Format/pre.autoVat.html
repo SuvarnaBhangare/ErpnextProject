@@ -1,0 +1,214 @@
+<style>
+
+        @page {
+          size: A4 landscape;
+        }
+        
+        
+        
+        </style>
+        
+        {% set _total_before_disc = [0] %}
+        {% set _total_items_disc = [0] %}
+        {% if doc.accounts|selectattr("page_break")|list|count > 0 %}
+            {% set _autoPagebreakItemsCount = -1.1 %}
+            {% set _totalNoPages = doc.accounts|selectattr("page_break")|list|count + 1 %}
+        {% else %}
+            {% set _autoPagebreakItemsCount = 5 %}
+            {% set _offset = 0 if (doc.accounts|count % _autoPagebreakItemsCount) == 0 else 1 %} {#To prevent incorrect
+            totalPage no in case modulus is 0#}
+            {% set _totalNoPages = (doc.accounts|count/_autoPagebreakItemsCount)|int + _offset %}
+        {%endif%}
+    {% set pageNo = [1] %}
+    
+    {% set p =frappe.get_list('Journal Entry Account AutoVAT', filters={"parent":doc.name,"account": ("!=", doc.vat_account),"debit": ("!=", "0.00")}, fields=['account']) %}
+    
+        <table width="100%">
+                <tr>
+                    <td width="50%">
+                        <p style="font-size:13px;text-align:left;"> <b style="text-transform: uppercase;font-size:15px;">
+                            {{doc.company }} </b><br>
+                            {% set dynamic_link = frappe.get_all('Dynamic Link', filters={'link_name':
+                                doc.company,'parenttype':"Address"}, fields=['parent'],order_by='creation') %}
+                                {% if dynamic_link[0]['parent'] -%}
+                                {% set address = frappe.get_doc("Address",dynamic_link[0]['parent']) %}
+                                {{ address.address_line1 }},
+                              
+                                {% if address.city %}
+                                {{ address.city }},
+                                {% if address.county -%}
+                                {{ address.county}} {%-endif%},
+                                {% if address.pincode %}
+                                {{ address.pincode }}<br>
+                                {%-endif%}
+            
+                                {%-endif%}
+                                {%-endif%}
+                        </p>
+                    </td>
+                    <td width="20%" style="text-align: right;">
+                        <b> Page {{ pageNo[pageNo|count - 1] }} of {{ _totalNoPages }} </b>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="50%" style="word-wrap:break-word;">
+                        <p style="font-size:12px;text-align:left;">
+                            <b style="font-size:13px;"><u>VAT REPORT</u></b><br>
+                            <b>Date</b>:{{doc.get_formatted("posting_date")}}<br>
+                            <b>Credit Account</b>:
+                            {% if doc.accounts[0].credit %}
+                                {{doc.accounts[0].account}}
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                {%if doc.accounts[0].party%}
+                                {{doc.accounts[0].party}}
+                                {%endif%}
+                            {%endif%}
+            
+            
+                        </p>
+                    </td>
+                </tr>
+            </table>
+            
+        <div style="position:relative; height:500px;">      
+            <table class="table table-bordered" >
+                <thead>
+                    <tr>
+                        <th style="width:3%;font: size 13px;text-align:center;"> Sr No.</td>
+                        <th style="width:12%;font-size:13px;text-align:center;"> Account</th>
+                        <th style="width:12%;font-size:13px;text-align:center;"> Cost Center</th>
+                        <th style="width:10%;font-size:13px;text-align:center;">Invoice No</th>
+                        <th style="width:12%;font-size:13px;text-align:center;">Tax Code</th>
+                        <th style="width:10%;font-size:13px;text-align:center;">Amount</th>
+                        <th style="width:10%;font-size:13px;text-align:center;">VAT</th>
+                        <th style="width:12%;font-size:13px;text-align:center;">Net</th>
+                        <th style="width:18%;font-size:13px;text-align:center;">Remark</th>
+                    </tr>
+                </thead>
+                {% set idx=[0] %}
+                {% set sum=[0] %}
+                {% set debit=[0] %}
+                {% set total_sum=[0]%}
+               
+                {%- for row in doc.accounts-%}
+                
+                <tr>
+    
+                {% if row.account!=doc.vat_account and row.debit %}
+                {% set __=idx.append(idx.pop() + 1) %}
+                    <td style="width:3%;font-size:11px;text-align:center;">{{idx[0]}}</td>
+                    <td style="width:12%;font-size:11px;text-align:center;">{{row.account}}</td>
+                    <td style="width:12%;font-size:11px;text-align:left;">{{row.cost_center}}</td>
+                    <td style="width:10%;font-size:11px;text-align:left;">
+                        {%if row.invoice_number %}
+                        {{row.invoice_number}}
+                        {%endif%}
+                    </td>
+                    <td style="width:12%;font-size:11px;text-align:left;"> {% if  row.vat_on %} 
+                        {{doc.vat_account}}
+                       {%endif%} </td>
+                    <td style="width:10%;font-size:11px;text-align:right;">{{row.debit}}</td>
+                    {% set vat=[0] %}
+                    {% if row.vat_on %}
+                    {% set __= vat.append(vat.pop()+row.debit*doc.vat_rate/100.00) %}
+                    {%endif%}
+                    {% set net_total=[0]%}
+                    {% set __=net_total.append(net_total.pop()+vat[0]+row.debit)%}
+                    {% set __=sum.append(sum.pop() + vat[0]) %}
+                    {% set __=debit.append(debit.pop() + row.debit) %}
+                    {% set __=total_sum.append(total_sum.pop() + net_total[0])%}
+                    <td style="width:10%;font-size:11px;text-align:right;">
+                            {{'%0.2f' % vat[0] }}
+                    </td>
+                   
+                    <td style="width:12%;font-size:11px;text-align:right;">{{ '%0.2f' %net_total[0] }}</td>
+                    <td style="width:18%;font-size:11px;text-align:left;">
+                        {%if row.user_remark%}
+                        {{ row.user_remark }}
+                        {%endif%}
+                    </td>
+                {%endif%}    
+                </tr>
+                {% if (row.page_break or loop.index % _autoPagebreakItemsCount == 0) -%}
+                {% if(loop.index < doc.accounts|count ) %} {#Skip Last item Page break#} {% set __=pageNo.append(pageNo.pop()
+                    + 1) %} 
+                </table> 
+                <div class="page-break"></div>
+                <table width="100%">
+                        <tr>
+                            <td width="50%">
+                                <p style="font-size:12px;text-align:left;"> <b style="text-transform: uppercase;font-size:13px;">
+                                    {{doc.company }} </b><br>
+                                    {% set dynamic_link = frappe.get_all('Dynamic Link', filters={'link_name':
+                                        doc.company,'parenttype':"Address"}, fields=['parent'],order_by='creation') %}
+                                        {% if dynamic_link[0]['parent'] -%}
+                                        {% set address = frappe.get_doc("Address",dynamic_link[0]['parent']) %}
+                                        {{ address.address_line1 }},
+                                      
+                                        {% if address.city %}
+                                        {{ address.city }},
+                                        {% if address.county -%}
+                                        {{ address.county}} {%-endif%},
+                                        {% if address.pincode %}
+                                        {{ address.pincode }}<br>
+                                        {%-endif%}
+                    
+                                        {%-endif%}
+                                        {%-endif%}
+                                </p>
+                            </td>
+                            <td width="20%" style="text-align: right;">
+                                <b> Page {{ pageNo[pageNo|count - 1] }} of {{ _totalNoPages }} </b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="50%" style="word-wrap:break-word;">
+                                <p style="font-size:12px;text-align:left;">
+                                    <b style="font-size:13px;"><u>VAT REPORT</u></b><br>
+                                    <b>Date</b>:{{doc.get_formatted("posting_date")}}<br>
+                                    <b>Credit Account</b>:
+                                    {% if doc.accounts[0].credit %}
+                                        {{doc.accounts[0].account}}
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        {%if doc.accounts[0].party%}
+                                        {{doc.accounts[0].party}}
+                                        {%endif%}
+                                    {%endif%}
+                    
+                    
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+               
+                <table class="table table-bordered" >
+                    <thead>
+                        <tr>
+                            <th style="width:3%;font: size 13px;text-align:center;"> Sr No.</td>
+                            <th style="width:12%;font-size:13px;text-align:center;"> Account</th>
+                            <th style="width:12%;font-size:13px;text-align:center;"> Cost Center</th>
+                            <th style="width:10%;font-size:13px;text-align:center;">Invoice No</th>
+                            <th style="width:12%;font-size:13px;text-align:center;">Tax Code</th>
+                            <th style="width:10%;font-size:13px;text-align:center;">Amount</th>
+                            <th style="width:10%;font-size:13px;text-align:center;">VAT</th>
+                            <th style="width:12%;font-size:13px;text-align:center;">Net</th>
+                            <th style="width:18%;font-size:13px;text-align:center;">Remark</th>
+                        </tr>
+                    </thead>
+                        {%- endif %}
+                        {%- endif %}
+            
+                        {%- endfor -%}
+                        <tr>
+                            <td colspan=4>Transaction ID:&nbsp;&nbsp;<b>{{doc.name}}</b>
+                            </td>
+                            <td style="width:12%;font-size:11px;text-align:center;"><b>Grand Total</b>
+                            </td>
+                            <td style="width:10%;font-size:11px;text-align:right;font-weight: bold">{{'%0.2f'% debit[0]}}</td>
+                            <td style="width:10%;font-size:11px;text-align:right;font-weight: bold">{{'%0.2f'% sum[0]}}</td>
+                            <td style="width:12%;font-size:11px;text-align:right;font-weight: bold">{{'%0.2f'% total_sum[0]}}</td>
+                            <td style="width:18%;font-size:11px;text-align:left;"></td>
+                        </tr>
+    
+                </table>
+            </div>

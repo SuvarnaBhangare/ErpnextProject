@@ -1,0 +1,29 @@
+{
+ "add_total_row": 1, 
+ "creation": "2018-11-28 16:07:06.415846", 
+ "disabled": 0, 
+ "docstatus": 0, 
+ "doctype": "Report", 
+ "idx": 0, 
+ "is_standard": "Yes", 
+ "modified": "2018-12-03 10:25:48.796222", 
+ "modified_by": "Administrator", 
+ "module": "eTOS", 
+ "name": "Sales VAT", 
+ "owner": "Administrator", 
+ "prepared_report": 0, 
+ "ref_doctype": "GL Entry", 
+ "report_name": "Sales VAT", 
+ "report_type": "Script Report", 
+ "roles": [
+  {
+   "role": "Accounts User"
+  }, 
+  {
+   "role": "Accounts Manager"
+  }, 
+  {
+   "role": "Auditor"
+  }
+ ]
+}

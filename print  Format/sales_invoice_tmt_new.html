@@ -1,0 +1,341 @@
+
+{% set _itemsPerPage = 5 %}
+{% set _totalNoPages = (doc.items|length / _itemsPerPage)|round(0,'ceil')|int %}
+
+<style type="text/css">
+  @page {
+        size: A5 landscape;
+
+    }
+@media screen {
+    .print-format{
+        width: 21.5cm;
+        padding: 0.25in;
+        height: 28cm;
+    }
+}
+
+.tbMain{
+    height: 485px;
+    width: 100%;
+    position: relative;
+    background-color: white;
+}
+#table_td
+{
+    padding-left: 5px;
+}
+hr{
+    margin: 0 !important;
+}
+
+thead{
+    font-weight: bold;
+}
+</style>
+ {% set sum=[0] %}
+{%- for i in range(doc.items|length) -%}
+{% set row = doc.items[i] %}
+{% if (i % _itemsPerPage) == 0 %}
+
+<table class="tbMain">
+    <tr>
+        <td>
+            <div class="divHeader" style="position: absolute;left: 0;width: 100%;background-color: White;">
+                <div width="100%" class="divdata1">
+                    <div style="float: left;width: 23%;">
+                        <span style="float: left;padding-left: 4px;font-size:7px;font-weight: bold">
+                            VAT Number:
+                            <span style="font-weight: bold;font-size:10px;">
+                            {% if  frappe.db.get_value('Company', doc.company, 'tax_id') !=None %} 
+                            {{  frappe.db.get_value('Company', doc.company, 'tax_id')  }} 
+                        {% endif %} 
+                            </span>
+                        </span> 
+                        <!-- <span style="float:right"> ظريبه الشراء </span> -->
+                    </div>
+                    <div style="text-align: center;border: none;width: 50%;float: left;">
+                   
+            <b><u style="text-align:center;font-size:12px;padding-left:100px;">Sales Invoice - فاتورة مبيعات </u></b>
+            
+            
+       
+                
+                    </div>
+                    <div style="width: 27%;float: left;padding-right: 5px;">
+                        <span style="float:right;"> <b>Page {{ ((i+1) / _itemsPerPage)|round(0,'ceil')|int }} of {{  _totalNoPages  }} </b> </span>
+                    </div>
+                </div>
+                <table class="table table-bordered">
+                        <tr>
+                            <td  colspan="2" style="font-size:8px">
+                                <b>رقم الفاتورة <br>Invoice No</b>
+                            </td>
+                            <td  colspan="3" style="font-size:8px">
+                               <b>{{doc.name}}</b> 
+                            </td>
+                            
+                            <td colspan="7" style="font-size:8px">
+                                <b>تاريخ الفاتورة <br>Invoice Date</b>:&nbsp;&nbsp;{{doc.posting_date}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td  colspan="2" style="font-size:8px">
+                                <b>اسم العميل<br>Customer</b>
+                            </td>
+                            <td  colspan="3" style="font-size:8px">
+                                <b>{{doc.customer_name}}</b><br>{% if doc.customer_name_in_arabic-%}{{doc.customer_name_in_arabic}}{%-endif%}
+                            </td>
+                            
+                            <td  colspan="7" style="font-size:8px">
+                                <b>أسم المندوب<br>Salesman</b>:&nbsp;&nbsp; 
+                                {% if doc.sales_team %}
+                              
+                              {{ doc.sales_team[0].sales_person }}
+                            {%-endif%}
+                             
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="18%" colspan="2" style="font-size:8px">
+                                <b> الرقم الضريبي للعميل <br>Customer VAT no.</b>
+                            </td>
+                            <td width="48%" colspan="3" style="font-size:8px">
+                             {%  if frappe.db.get_value('Customer', doc.customer_name, 'tax_id') !=None%}
+                                {{ frappe.db.get_value('Customer', doc.customer_name, 'tax_id')}}
+                               {%-endif%}
+                            </td>
+                            
+                            <td colspan="7" style="font-size:8px">
+                            <b>رقم التعميد<br>P.O.No.</b>:&nbsp;&nbsp;
+                            {% if doc.po_no -%}
+                            {{doc.po_no}}
+                            {%-endif%}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="font-size:8px">
+                                <b>طريقة السداد<br>Payment Term</b>
+                            </td>
+                            <td  colspan="3" style="font-size:8px">
+                                {% if doc.payment_terms_template%}
+                                {{ doc.payment_terms_template }}
+                               {%-endif%}
+                            </td>
+                            
+                            <td  colspan="7" style="font-size:8px">
+                                <b>الملاحظات<br>Note</b>:&nbsp;&nbsp;{% if doc.tax_id -%}
+                                {{doc.tax_id}}
+                                {%-endif%}
+                            </td>
+                        </tr>
+                      
+                        <tr>
+                            <th width="5%" style="font-size:7px;font-weight: bold;">الرقم التسلسلي <br>Sr.No</th>
+                            <th width="7%" style="font-size:7px;font-weight: bold;">رقم البند<br>Item No</th>
+                            <th width="29%" style="font-size:7px;font-weight: bold;">أســــم الصنف<br>Description</th>
+                            <th width="5%" style="font-size:7px;font-weight: bold;">الوحدة<br>Unit</th>
+                            <th width="8%" style="font-size:7px;font-weight: bold;">سعر الوحدة <br>Unit Price</th>
+                            <th width="5%" style="font-size:7px;font-weight: bold;">الكمية<br>Qty.</th>
+                            <th width="9%" style="font-size:7px;font-weight: bold;">تاريخ الانتهاء  <br>Exp.Date.</th>
+                            <th width="8%" style="font-size:7px;font-weight: bold;">رقم التشغيلة <br>Lot Number</th>
+                            
+                           
+                            
+                            <th width="6%" style="font-size:7px;font-weight: bold;">الضريبة<br>VAT %</th>
+                            <th width="8%" style="font-size:7px;font-weight: bold;">ضريبةكمية<br>VAT Amount</th>
+                            <th width="8%" style="font-size:7px;font-weight: bold;">الإجمالي<br>Total Amt</th>
+                        </tr>
+                  
+                    {% endif %}
+                            <tr>
+                                <td width="5%" style="font-size:7px;">{{row.idx}}</td>
+                                <td width="7%" style="font-size:7px;font-weight: bold;"> {{row.item_code}}<br>
+                                   
+                                </td>
+                                <td width="29%" style="font-size:9px;text-align:left;word-wrap:break-word;font-weight: bold;"><div style="border: 0px;"><b>{{ row.description }}</b><br>
+                                    {% if frappe.db.get_value('Item',row.item_code, 'item_name_in_arabic') !=None %}
+                                    {{ frappe.db.get_value('Item',row.item_code, 'item_name_in_arabic') }}
+                                    {%-endif%}</td>
+                                <td width="5%" style="font-size:7px;font-weight: bold;">{{row.uom or row.stock_uom}}</td>
+                                <td width="8%" style="font-size:7px;text-align:right;">{{ '%0.2f'%row.rate }}</td>
+                                <td width="5%" style="font-size:7px;font-weight: bold;">{{ row.qty }}</td>
+                                <td width="9%" style="font-size:7px">
+                                    {% if frappe.db.get_value('Batch', row.batch_no, 'expiry_date') !=None %}
+                                    {{ frappe.db.get_value('Batch', row.batch_no, 'expiry_date').strftime("%d-%m-%Y") }}{%-endif%}
+                                </td>
+                                <td width="8%" style="font-size:7px;">{% if row.batch_no -%}{{row.batch_no}}{%-endif%}</td>
+                                
+                               
+                                
+                                <td width="6%" style="font-size:7px;text-align:right;">
+                                    {% if row.tax_rate %}
+                                    {{ row.tax_rate }}
+                                    {%else%}{{0}}{%endif%}&nbsp;%</td>
+                                <td width="6%" style="font-size:7px;text-align:right;">
+                                    {% if row.tax_rate %}
+                                    {% set tax= row.amount*row.tax_rate/100.00 %}
+                                    {% set __=sum.append(sum.pop() + tax) %}
+                                   
+                                    {{ '%0.2f' %tax }}
+                                    {%else%}
+                                    {{0.00}}
+                                    {%endif%}</td>
+                                    <td width="8%" style="font-size:7px;text-align:right;">{{'%0.2f'% row.total_amount }}</td>
+                    
+                                    
+                    
+                            </tr>
+                          
+                           
+                            {% if ((i + 1) % _itemsPerPage) == 0 or i == (doc.items|length - 1) %} 
+                            {% if i  == (doc.items|length - 1) -%}
+                            <tr>
+                                    <td colspan="2" style="font-size:7px;"></td>
+                                    <td colspan="5" style="font-size:7px;"></td>
+                                    <td  style="font-size:7px;"><b>Total:</b></td>
+                                   
+                                    <td  style="font-size:7px;text-align:right"><b></b></td>
+                                    <td  style="font-size:7px;text-align:right"><b>{{ '%0.2f'%sum[0] }}</b></td>
+                                    <td  style="font-size:7px;text-align:right"><b>{{ '%0.2f'%doc.items|sum(attribute='total_amount')}}</b></td>
+                                </tr>
+                                <tr>
+                                        <td colspan="2" style="font-size:7px;"></td>
+                                        <td colspan="4" style="font-size:7px;"></td>
+                                        <td colspan="2" style="font-size:7px;"><b>اضريبة القيمة المضافة 5 ٪ المبلغ<br>VAT 5% Amount</b></td>
+                                        <td  style="font-size:11px;text-align:right"><b> {%- for row in doc.taxes -%}
+                                                {% set d= "VAT 5% - " %}
+                                               
+                                               {% if d in row.account_head  -%}
+                                              <b>{{'%0.2f'% row.tax_amount}}</b> 
+                                               {%- endif -%}
+                                               {%- endfor -%}</td>
+                                               <td  style="font-size:7px;text-align:right"><b></b></td>
+                                               <td  style="font-size:7px;text-align:right"><b></b></td>
+                                    </tr> 
+                                    <tr>
+                                        <td colspan="2" style="font-size:7px;"></td>
+                                        <td colspan="4" style="font-size:7px;"></td>
+                                        <td colspan="2" style="font-size:7px;"><b>الخصم<br>Discount</b></td>
+                                        <td  style="font-size:7px;text-align:right">
+                                            {%- for row in doc.taxes -%}
+                                            {% set d= "Discount -" %}
+                                               
+                                            {% if d in row.account_head  -%}
+                                           <b>{{'%0.2f'% row.tax_amount}}</b> 
+                                            {%- endif -%}
+                                            {%- endfor -%}
+                                              </td>
+                                        <td  style="font-size:7px;text-align:right"><b></b></td> 
+                                        <td  style="font-size:7px;text-align:right"><b></b></td>     
+                                    </tr>    
+                                    <tr>
+                                            <td colspan="2" style="font-size:7px;"><b>Net amount</b></td>
+                                            <td colspan="4" style="font-size:7px;"><b>{{doc.in_words}}</b><br>
+                                                <!-- {% if doc.total_in_words-%}
+                                                {{doc.total_in_words}}
+                                                {%-endif%}--></td>
+                                            <td colspan="2" style="font-size:7px;"><b>الأجمالي الكلي<br>Grand Total</b></td>
+                                            <td  style="font-size:11px;text-align:right">
+                                                   
+                                                  <b>{{'%0.2f'% doc.grand_total }}</b> 
+                                                  </td>
+                                            <td  style="font-size:7px;text-align:right"><b></b></td> 
+                                            <td  style="font-size:7px;text-align:right"><b></b></td>     
+                                        </tr>    
+                                        {%-endif%}
+                    </table>
+                    <!-- <table width="100%">
+                            <tr>
+                                <td width="50%">
+            
+                                </td>
+                                <td width="25%">
+                                    <b>VAT 5 % Amount</b>
+            
+                                    </td>
+                                    <td width="25%">
+                                            {%- for row in doc.taxes -%}
+                                            {% set d= "VAT 5% - " %}
+                                           
+                                           {% if d in row.account_head  -%}
+                                          <b>{{ row.get_formatted("tax_amount", doc) }}</b> 
+                                           {%- endif -%}
+                                           {%- endfor -%}
+            
+                                        </td>
+                            </tr>
+                            <tr>
+                                    <td width="50%">
+                
+                                    </td>
+                                    <td width="25%">
+                                      <b>Grand Total</b> 
+                
+                                        </td>
+                                        <td width="25%">
+                                               <b>{{doc.get_formatted("grand_total")}}</b> 
+                                            </td>
+                                </tr>
+            
+                        </table>        -->
+            </div> 
+           
+            
+        
+            {% if i  == (doc.items|length - 1) %}
+            <div style="position: absolute;bottom: 0;width: 100%;">
+                      
+
+                    <table width = "99%" border=1>
+                        <tr >
+                            <td styel="width:33.33%;font-size:12px;"><center><b>أستلم بواسطة</b></center>
+
+                            </td>
+                            <td styel="width:33.33%;font-size:12px;text-align:center;font-weight:bold;"><center><b>المحاسب</b></center>		
+
+                            </td>
+                            <td styel="width:20.33%;font-size:12px;text-align:center;font-weight:bold;"><center><b>أمين المستودع</b></center>
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="height:70px;">
+                                <div>
+                                    <div style="width:30%;padding-left: 23%;float: left;font-weight:bold;">
+                                       : الأســـم                                                          
+                                    </div>
+                                    <div style="width:30%;padding-left: 23%;float: left;font-weight:bold;">
+                                           : الأســـم 
+                                        </div>
+                                        <div style="width:30.33%;padding-left: 23%;float: right;font-weight:bold;">
+                                               : الأســـم 
+                                            </div>
+                                </div>   <br><br>  
+                                <div>
+                                        <div style="width:30%;padding-left: 23%;float: left;font-weight:bold;">
+                                              :التوقيع                                                         
+                                        </div>
+                                        <div style="width:30%;padding-left: 23%;float: left;font-weight:bold;">
+                                             : التوقيع 
+                                            </div>
+                                            <div style="width:30.33%;padding-left: 23%;float: right;font-weight:bold;">
+                                                  :التوقيع 
+                                                </div>
+                                    </div>             
+                            </td>
+                        </tr>
+                    </table>
+
+            
+                
+            </div>
+{%- endif %}            
+        </td>
+    </tr>
+</table>
+<div class="page-break"></div>
+{%-endif %}
+
+{%- endfor -%}
+

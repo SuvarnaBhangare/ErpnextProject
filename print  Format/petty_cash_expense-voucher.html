@@ -1,0 +1,230 @@
+<style>
+
+        @page {
+            size: A4 landscape;
+        }
+        #table_td
+        {
+            
+        }
+        
+    </style>
+    
+    {% set _total_before_disc = [0] %}
+    {% set _total_items_disc = [0] %}
+        {% if doc.expense_voucher_entry_table_new|selectattr("page_break")|list|count > 0 %}
+            {% set _autoPagebreakItemsCount = -1.1 %}
+            {% set _totalNoPages = doc.expense_voucher_entry_table_new|selectattr("page_break")|list|count + 1 %}
+        {% else %}
+            {% set _autoPagebreakItemsCount = 9 %}
+            {% set _offset = 0 if (doc.expense_voucher_entry_table_new|count % _autoPagebreakItemsCount) == 0 else 1 %} {#To prevent incorrect
+            totalPage no in case modulus is 0#}
+            {% set _totalNoPages = (doc.expense_voucher_entry_table_new|count/_autoPagebreakItemsCount)|int + _offset %}
+        {%endif%}
+    {% set pageNo = [1] %}
+    <table width="100%">
+        <tr>
+            <td width="50%">
+                <p style="font-size:12px;text-align:left;"> <b style="text-transform: uppercase;font-size:14px;">
+                    {{doc.company }} </b><br>
+                    {% set dynamic_link = frappe.get_all('Dynamic Link', filters={'link_name':
+                        doc.company,'parenttype':"Address"}, fields=['parent'],order_by='creation') %}
+                        {% if dynamic_link[0]['parent'] -%}
+                        {% set address = frappe.get_doc("Address",dynamic_link[0]['parent']) %}
+                        {{ address.address_line1 }},
+                      
+                        {% if address.city %}
+                        {{ address.city }},
+                        {% if address.county -%}
+                        {{ address.county}} {%-endif%},
+                        {% if address.pincode %}
+                        {{ address.pincode }}<br>
+                        {%-endif%}
+    
+                        {%-endif%}
+                        {%-endif%}
+                </p>
+            </td>
+            <td width="20%" style="text-align: right;">
+                <b> Page {{ pageNo[pageNo|count - 1] }} of {{ _totalNoPages }} </b>
+            </td>
+        </tr>
+        <tr>
+            <td width="50%">
+                <p style="font-size:11px;text-align:left;">
+                    <b style="font-size:11px;"><u>PETTY CASH REPORT</u></b><br>
+                    <b>Date</b>:{{doc.get_formatted("voucher_date")}}<br>
+                    <b>Credit Account</b>:{{doc.credit_account}}
+                </p>
+            </td>
+        </tr>
+    </table>
+    <div style="position:relative; height:500px;">  
+    <table class="table table-bordered" >
+        <thead>
+            <tr>
+                <th style="width:3%;text-align:center;">L.No.</td>
+                <th style="width:10%;text-align:center;">Cost Center</th>
+                <th style="width:10%;text-align:center;"> Invoice No</th>
+                <th style="width:8%;text-align:center;">Date </th>
+                <th style="width:11%;text-align:center;">Employee Name </th>
+                <th style="width:7%;text-align:center;">Tax Code</th>
+                <th style="width:7%;text-align:center;">VAT ID</th>
+                <th style="width:7%;text-align:center;">Amount</th>
+                <th style="width:5%;text-align:center;">VAT</th>
+                <th style="width:7%;text-align:center;">Net</th>
+                <th style="width:24%;text-align:center;">Expense Account / Narration</th>
+            </tr>
+        </thead>
+            {%- for row in doc.expense_voucher_entry_table_new -%}
+            <tr>
+                <td style="font-size:10px;">{{row.idx}}</td>
+                <td style="font-size:10px;">{% if row.cost_center %}
+                        {{row.cost_center}}
+                    {%endif%}</td>
+                <td style="font-size:10px;">
+                    {% if row.reference_invoice_number %}
+                        {{row.reference_invoice_number}}
+                    {%endif%}
+                    <!-- {%if row.vat_account%}
+                    <hr style="margin-top: 0px; margin-bottom: 0px;">
+                        {{row.vat_account}}
+                    {%endif%}
+                     {%if row.supplier%}
+                     <hr style="margin-top: 0px; margin-bottom: 0px;">
+                        {{row.supplier}}
+                    {%endif%} -->
+                </td>
+                <td style="font-size:10px;">
+                    {%if row.reference_date%}
+                    {{row.get_formatted("reference_date")}}
+                    {%endif%}
+                </td>
+                <td style="font-size:10px;">
+                    {% if frappe.db.get_value('Employee', row.employee, 'employee_name')!=None %}
+                    {{ frappe.db.get_value('Employee', row.employee, 'employee_name') }}
+                    {%endif%}
+                </td>
+                <td style="font-size:10px;">
+                    {% if row.vat_account%}
+                    {{row.vat_account}}
+                    {%endif%}
+                </td>
+                <td style="font-size:10px;">
+                    {%if row.vat_number%}
+                    {{row.vat_number}}
+                    {%endif%}
+                </td>
+                <td style="font-size:10px; text-align:right;">{{ '%0.2f' | format(row.credit_amount) }}</td>
+                <td style="font-size:10px; text-align:right;">{{ '%0.2f' | format(row.vat_amount) }}</td>
+                <td style="font-size:10px; text-align:right;">{{ '%0.2f' | format(row.expense_amount) }}</td>
+                <td style="font-size:9px;text-align:left;word-wrap: break-word">
+                    {{row.expense_account}}<br>
+                    <b>Project</b>:{%if row.project%}{{row.project}}{%endif%}<br>
+                    <b>Asset</b>:{%if row.asset%}{{row.asset}}{%endif%}
+                </td>
+            </tr>
+            {% if (row.page_break or loop.index % _autoPagebreakItemsCount == 0) -%}
+                {% if(row.page_break or loop.index< doc.expense_voucher_entry_table_new|count ) %}{#Skip Last item Page break#}  
+                
+                {% set __ = pageNo.append(pageNo.pop() + 1) %}
+           
+       
+    </table>
+    <div class="page-break"></div>
+    <table width="100%">
+            <tr>
+                <td width="50%">
+                    <p style="font-size:12px;text-align:left;"> <b style="text-transform: uppercase;font-size:14px;">
+                        {{doc.company }} </b><br>
+                        {% set dynamic_link = frappe.get_all('Dynamic Link', filters={'link_name':
+                            doc.company,'parenttype':"Address"}, fields=['parent'],order_by='creation') %}
+                            {% if dynamic_link[0]['parent'] -%}
+                            {% set address = frappe.get_doc("Address",dynamic_link[0]['parent']) %}
+                            {{ address.address_line1 }},
+                          
+                            {% if address.city %}
+                            {{ address.city }},
+                            {% if address.county -%}
+                            {{ address.county}} {%-endif%},
+                            {% if address.pincode %}
+                            {{ address.pincode }}<br>
+                            {%-endif%}
+        
+                            {%-endif%}
+                            {%-endif%}
+                    </p>
+                </td>
+                <td width="20%" style="text-align: right;">
+                        <b> Page {{ pageNo[pageNo|count - 1] }} of {{ _totalNoPages }} </b>
+                    </td>
+            </tr>   
+            <tr>
+                    <td width="50%">
+                
+                        <p style="font-size:11px;text-align:left;">
+                            <b style="font-size:11px;"><u>PETTY CASH REPORT</u></b><br>
+                            <b>Date</b>:{{doc.get_formatted("voucher_date")}}<br>
+                            <b>Credit Account</b>:{{doc.credit_account}}
+                            
+            
+            
+                        </p>
+                    </td>
+            </tr>
+    </table>    
+    
+    <div style="position:relative; height:500px;">  
+            <table class="table table-bordered" ">
+                <thead>
+                    <tr>
+                        <th style="width:3%;text-align:center;">L.No.</td>
+                        <th style="width:10%;text-align:center;">Cost Center</th>
+                        <th style="width:10%;text-align:center;"> Invoice No</th>
+                        <th style="width:8%;text-align:center;">Date </th>
+                        <th style="width:11%;text-align:center;">Employee Name </th>
+                        <th style="width:7%;text-align:center;">Tax Code</th>
+                        <th style="width:7%;text-align:center;">VAT ID</th>
+                        <th style="width:7%;text-align:center;">Amount</th>
+                        <th style="width:5%;text-align:center;">VAT</th>
+                        <th style="width:7%;text-align:center;">Net</th>
+                        <th style="width:24%;text-align:center;">Expense Account / Narration</th>
+                    </tr>
+                </thead>
+                {%- endif %}
+                {%- endif %}
+    
+                {%- endfor -%}
+            </table>
+    
+    
+    <div style="position: absolute; bottom: 0; width: 100%;">
+    <table width="100%" >
+            <tr>
+                <td width="33.33%" style="border-bottom: 1px solid black;text-align: center;font-size:10px;"><b>{{frappe.get_fullname(doc.owner)}}</b>
+                </td>
+                <td width="33.33%" style="border-bottom: 1px solid black;">
+                </td>
+                
+                <td width="33.33%" style="border-bottom: 1px solid black;">
+                </td>
+                    
+            </tr>
+            <tr>
+                <td id="table_td"  width="33.33%" style="text-align: center;">
+                      
+                    <b> Prepared By</b>
+                </td>
+                <td id="table_td"  width="33.33%" style="text-align: center;">
+                    
+                   <b>Checked By</b>
+                </td>
+                
+            
+                <td id="table_td" width="33.33%" style="text-align: center;">
+                          <b>Posted By</b>
+                </td>
+            </tr>
+        </table>
+    </div>    
+    </div>   

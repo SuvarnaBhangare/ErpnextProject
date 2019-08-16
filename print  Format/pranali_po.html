@@ -1,0 +1,435 @@
+
+
+<style>
+    .word-wrap-2-lines {
+              word-break: break-word;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              display: -webkit-box;
+              -webkit-box-orient: vertical;
+              -webkit-line-clamp: 2; 
+          }
+          .supplier {
+              width: 100%;
+          }
+          .word-wrap-5-lines {
+              word-break: break-word;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              display: -webkit-box;
+              -webkit-box-orient: vertical;
+              -webkit-line-clamp: 5; 
+          }
+          @page {
+        size: A4;
+    }
+  </style>
+  <!-- Items table header -->
+  {% if doc.rounding_adjustment!=0  %}
+  {% set _total_rows=doc.items|count+doc.taxes|count+1 %}
+  {%  else %}
+  {% set _total_rows=doc.items|count+doc.taxes|count %}
+  {% endif %}
+
+  {% set _total_before_disc = [0] %}
+  {% set _total_items_disc = [0] %}
+  {% if doc.items|selectattr("page_break")|list|count > 0 %}
+  {% set _autoPagebreakItemsCount = -1.1 %}
+  {% set _totalNoPages = doc.items|selectattr("page_break")|list|count + 1 %}
+  {% else %}
+  {% set _autoPagebreakItemsCount = 9 %}
+  {% set _offset = 0 if (_total_rows % _autoPagebreakItemsCount) == 0 else 1 %} 
+  {#To prevent incorrect totalPage no in case modulus is 0#}
+  {% set _totalNoPages = (_total_rows/_autoPagebreakItemsCount)|int + _offset %}
+  {%endif%}
+  {% set pageNo = [1] %}
+  {% set break=[0] %}
+  {% for row in doc.items  %}
+      {% if row.page_break %}
+      {% set __=break.append(break.pop()+row.page_break)%}
+      {% endif %}
+  {% endfor %}
+  
+  <div style="font-size:12px;float: right;display:none;"><b> Page {{ pageNo[pageNo|count - 1] }} of {{ _totalNoPages }} </b></div>
+  <div style="width:100%;">
+          <div class="container" style="width:100%;padding:0px;padding-top:15px;padding-bottom:15px;border:1px solid black">
+              <div style="width:35%;float:left;">
+                  <center><img style="height: 65px;width: 95%;" src="/files/abr_logo.png"></center>
+              </div>
+              <div style="width:65%;float:right">
+                  <h3>ABRICAN GENERAL CONT. CO.  
+                  </h3>
+              </div>
+          </div>
+      
+          <div class="container" style="width:100%;margin-top:0px;padding:0px;border:1px solid black">
+            <div style="width:50%;border-right:1px solid black;float:left;text-align:center">
+                <h4 style="margin:5px">Purchase order</h4>
+            </div>
+            <div style="width:30%;float:left;text-align:center;padding:0px">
+                <h4 style="margin:5px">AAG-PO-00005</h4>
+            </div>
+            <div style="width:20%;float:left;text-align:center;padding:0px;border-left:1px solid black;">
+                <h4 style="margin:5px">Rev. No. 0</h4>
+            </div>
+        </div>
+      </div>
+  
+  <div style="width:100%;border:1px solid black;margin-top: 24px;" >
+      <center>
+          <table style="width:99%; border:1px solid black;margin:3px;">
+              <tr>
+                  <td width="20%" style="font-weight:bold;">Date</td>
+                  <td width="30%" style="font-weight:bold;"> {{ frappe.utils.get_datetime(doc.any_date).strftime("%d %b %Y",) }}</td>
+                  <td width="20%" style="font-weight:bold;">Quotation Ref.</td>
+                  <td width="30%" style="font-weight:bold;" >{%if doc.get("items")[0]["supplier_quotation"] %}{{  doc.get("items")[0]["supplier_quotation"]  }} {%  endif  %}</td>
+              </tr>
+            
+              <tr>
+                  <td width="20%" style="font-weight:bold;">Supplier  </td>
+                  <td width="30%" style="font-weight:bold;" {%  if not break[0] %} class="word-wrap-2-lines supplier" {% endif %}> {{ doc.supplier }}</td>
+                  <td width="20%" style="font-weight:bold;">Attention</td>
+                  <td width="30%"  style="font-weight:bold;" {%  if not break[0] %} class="word-wrap-2-lines supplier" {% endif %}>{{ doc.supplier }}</td>
+              </tr>
+              <tr>
+                  <td width="20%" style="font-weight:bold;"> PO Number</td>
+                  <td width="30%" style="font-weight:bold;">{{ doc.name }}</td>
+                  <td width="20%" style="font-weight:bold;">Email</td>
+                  <td width="30%" style="font-weight:bold;">
+                      {% set dynamic_link = frappe.get_list('Dynamic Link', filters={'link_name':
+                      doc.supplier,'parenttype':"Contact",'link_doctype':"Supplier"}, fields=['parent'],order_by='creation') %}
+                      
+                      {% if dynamic_link %}
+                        {% if dynamic_link[0]['parent'] -%}
+                       
+                        {% set contact = frappe.get_doc("Contact",dynamic_link[0]['parent']) %}
+                        
+                        {%- if contact.email_id -%}
+                        {{ contact.email_id }}
+                        {%-endif-%}
+                        {%-endif%}
+                        {%-endif%}
+                        
+  
+  
+                  </td>
+              </tr>
+          </table>
+      </center>
+  </div>
+  <div style="position: relative;height:710px;width: 100%;">
+  <div style="width:100%;margin-top:30px;">
+      <table class="table-bordered" width="100%">
+        <thead>
+            <tr>
+                <th width="10%" style="text-align:center;">Item No</th>
+                
+                <th width="45%" style="text-align:center;">Description</th>
+                <th width="10%" style="text-align:center;">Quantity</th>
+                <th width="15%" style="text-align:center;">Unit Rate</th>
+                <th width="25%" style="text-align:center;"> Total Amount</th>
+            </tr>
+            </thead>
+         
+          {% for row in doc.items  %}
+          <tr  style="font-weight:bold;">
+          <td width="10%" style="text-align: center;">
+                  {{ row.idx }}
+              </td>
+              
+              <td width="45%"  >
+                      {{ row.item_code }} <div style="height:1px;" ></div> <span {%  if not break[0] %} class="word-wrap-2-lines" {% endif %} > {{ row.description }} </span>
+              </td>
+              <td width="10%"  style="text-align:right;">
+                  {{ row.qty }}
+              </td>
+              <td width="15%"  style="text-align:right;">
+                  {{ row.get_formatted("rate") }}
+              </td>
+              <td width="25%"  style="text-align:right;">
+                  {{ row.get_formatted("amount") }}
+              </td>
+          </tr>
+          {% if (row.page_break or loop.index % _autoPagebreakItemsCount == 0) -%}
+          {% if(row.page_break or loop.index  < _total_rows ) %} {#Skip Last item Page break#} {% set __=pageNo.append(pageNo.pop()
+              + 1) %} 
+          </table>
+          </div> 
+          <div class="page-break"></div>
+          
+  <div style="font-size:12px;float: right;display:none;"><b> Page {{ pageNo[pageNo|count - 1] }} of {{ _totalNoPages }} </b></div>
+  <div style="width:100%;">
+          <div class="container" style="width:100%;padding:0px;padding-top:15px;padding-bottom:15px;border:1px solid black">
+              <div style="width:35%;float:left">
+                  <center><img style="height: 65px;width: 95%;" src="/files/abr_logo.png"></center>
+              </div>
+              <div style="width:65%;float:right">
+                  <h3>ABRICAN GENERAL CONT. CO.  
+                  </h3>
+              </div>
+          </div>
+      
+          <div class="container" style="width:100%;margin-top:0px;padding:0px;border:1px solid black">
+            <div style="width:50%;border-right:1px solid black;float:left;text-align:center">
+                <h4 style="margin:5px">Purchase order</h4>
+            </div>
+            <div style="width:30%;float:left;text-align:center;padding:0px">
+                <h4 style="margin:5px">AAG-PO-00005</h4>
+            </div>
+            <div style="width:20%;float:left;text-align:center;padding:0px;border-left:1px solid black;">
+                <h4 style="margin:5px">Rev. No. 0</h4>
+            </div>
+        </div>
+      </div>
+  
+  <div style="width:100%;border:1px solid black;margin-top: 24px;" >
+      <center>
+          <table style="width:99%; border:1px solid black;margin:3px;">
+              <tr>
+                  <td width="20%" style="font-weight:bold;">Date</td>
+                  <td width="30%" style="font-weight:bold;"> {{ frappe.utils.get_datetime(doc.any_date).strftime("%d %b %Y",) }}</td>
+                  <td width="20%" style="font-weight:bold;">Quotation Ref.</td>
+                  <td width="30%" style="font-weight:bold;" >{%if doc.get("items")[0]["supplier_quotation"] %}{{  doc.get("items")[0]["supplier_quotation"]  }} {%  endif  %}</td>
+              </tr>
+            
+              <tr>
+                  <td width="20%" style="font-weight:bold;">Supplier  </td>
+                  <td width="30%" style="font-weight:bold;" {%  if not break[0] %} class="word-wrap-2-lines supplier" {% endif %}>{{ doc.supplier }}</td>
+                  <td width="20%" style="font-weight:bold;">Attention</td>
+                  <td width="30%" style="font-weight:bold;" {%  if not break[0] %} class="word-wrap-2-lines supplier" {% endif %}>{{ doc.supplier }}</td>
+              </tr>
+              <tr>
+                  <td width="20%" style="font-weight:bold;"> PO Number</td>
+                  <td width="30%" style="font-weight:bold;">{{ doc.name }}</td>
+                  <td width="20%" style="font-weight:bold;">Email</td>
+                  <td width="30%" style="font-weight:bold;">
+                        {% set dynamic_link = frappe.get_list('Dynamic Link', filters={'link_name':
+                        doc.supplier,'parenttype':"Contact",'link_doctype':"Supplier"}, fields=['parent'],order_by='creation') %}
+                        
+                        {% if dynamic_link %}
+                          {% if dynamic_link[0]['parent'] -%}
+                         
+                          {% set contact = frappe.get_doc("Contact",dynamic_link[0]['parent']) %}
+                          
+                          {%- if contact.email_id -%}
+                          {{ contact.email_id }}
+                          {%-endif-%}
+                          {%-endif%}
+                          {%-endif%}
+                        
+  
+  
+                  </td>
+              </tr>
+          </table>
+      </center>
+  </div>
+          <div style="position: relative;height:710px;width: 100%;">
+              <div style="width:100%;margin-top:30px;">
+                  <table class="table-bordered" width="100%">
+                    <thead>
+                        <tr>
+                            <th width="10%" style="text-align:center;">Item No</th>
+                            
+                            <th width="45%" style="text-align:center;">Description</th>
+                            <th width="10%" style="text-align:center;">Quantity</th>
+                            <th width="15%" style="text-align:center;">Unit Rate</th>
+                            <th width="25%" style="text-align:center;"> Total Amount</th>
+                        </tr>
+                        </thead>
+                      {%- endif %}
+                      {%- endif %}
+          {% endfor %}
+          {% set total_rows =[doc.items|count]  %}
+          {% for tax in doc.taxes  %}
+  
+          {% set __=total_rows.append(total_rows.pop()+ 1) %} 
+          <tr  style="font-weight:bold;">
+                  <td width="10%" style="text-align: center;">
+                          {{ total_rows[total_rows|count-1] }}
+                      </td>
+                      <!-- <td width="15%">
+                          
+                      </td> -->
+                      <td width="45%" >
+                          {% set account_head = tax.account_head .split('-') %}
+                               {{ account_head[0] }}
+                      </td>
+                      <td width="10%"  style="text-align:right;">
+                      </td>
+                      <td width="15%"  style="text-align:right;">
+                      </td>
+                      <td width="25%"  style="text-align:right;">
+                          {{ tax.get_formatted("tax_amount") }}
+                      </td>
+                  </tr>
+                  {% if ( total_rows[total_rows|count-1] % _autoPagebreakItemsCount == 0) -%}
+                  {% if( total_rows[total_rows|count-1]  < _total_rows ) %} {#Skip Last item Page break#} {% set __=pageNo.append(pageNo.pop()
+                      + 1) %} 
+                  </table>
+                  </div> 
+                  <div class="page-break"></div>
+                 
+  <div style="font-size:12px;float: right;display:none;"><b> Page {{ pageNo[pageNo|count - 1] }} of {{ _totalNoPages }} </b></div>
+  <div style="width:100%;">
+          <div class="container" style="width:100%;padding:0px;padding-top:15px;padding-bottom:15px;border:1px solid black">
+              <div style="width:35%;float:left">
+                  <center><img style="height: 65px;width: 95%;" src="/files/abr_logo.png"></center>
+              </div>
+              <div style="width:65%;float:right">
+                  <h3>ABRICAN GENERAL CONT. CO.  
+                  </h3>
+              </div>
+          </div>
+      
+          <div class="container" style="width:100%;margin-top:0px;padding:0px;border:1px solid black">
+            <div style="width:50%;border-right:1px solid black;float:left;text-align:center">
+                <h4 style="margin:5px">Purchase order</h4>
+            </div>
+            <div style="width:30%;float:left;text-align:center;padding:0px">
+                <h4 style="margin:5px">AAG-PO-00005</h4>
+            </div>
+            <div style="width:20%;float:left;text-align:center;padding:0px;border-left:1px solid black;">
+                <h4 style="margin:5px">Rev. No. 0</h4>
+            </div>
+        </div>
+      </div>
+  
+  <div style="width:100%;border:1px solid black;margin-top: 24px;" >
+      <center>
+          <table style="width:99%; border:1px solid black;margin:3px;">
+              <tr>
+                  <td width="20%" style="font-weight:bold;">Date</td>
+                  <td width="30%" style="font-weight:bold;"> {{ frappe.utils.get_datetime(doc.any_date).strftime("%d %b %Y",) }}</td>
+                  <td width="20%" style="font-weight:bold;">Quotation Ref.</td>
+                  <td width="30%" style="font-weight:bold;" >{%if doc.get("items")[0]["supplier_quotation"] %}{{  doc.get("items")[0]["supplier_quotation"]  }} {%  endif  %}</td>
+              </tr>
+            
+              <tr>
+                  <td width="20%" style="font-weight:bold;">Supplier  </td>
+                  <td width="30%" style="font-weight:bold;" {%  if not break[0] %} class="word-wrap-2-lines supplier" {% endif %}>{{ doc.supplier }}</td>
+                  <td width="20%" style="font-weight:bold;">Attention</td>
+                  <td width="30%" style="font-weight:bold;" {%  if not break[0] %} class="word-wrap-2-lines supplier" {% endif %}>{{ doc.supplier }}</td>
+              </tr>
+              <tr>
+                  <td width="20%" style="font-weight:bold;"> PO Number</td>
+                  <td width="30%" style="font-weight:bold;">{{ doc.name }}</td>
+                  <td width="20%" style="font-weight:bold;">Email</td>
+                  <td width="30%" style="font-weight:bold;">
+                        {% set dynamic_link = frappe.get_list('Dynamic Link', filters={'link_name':
+                        doc.supplier,'parenttype':"Contact",'link_doctype':"Supplier"}, fields=['parent'],order_by='creation') %}
+                        
+                        {% if dynamic_link %}
+                          {% if dynamic_link[0]['parent'] -%}
+                         
+                          {% set contact = frappe.get_doc("Contact",dynamic_link[0]['parent']) %}
+                          
+                          {%- if contact.email_id -%}
+                          {{ contact.email_id }}
+                          {%-endif-%}
+                          {%-endif%}
+                          {%-endif%}
+                        
+  
+  
+                  </td>
+              </tr>
+          </table>
+      </center>
+  </div>
+                  <div style="position: relative;height:710px;width: 100%;">
+                      <div style="width:100%;margin-top:30px;">
+                          <table class="table-bordered" width="100%">
+                            <thead>
+                                <tr>
+                                    <th width="10%" style="text-align:center;">Item No</th>
+                                    
+                                    <th width="45%" style="text-align:center;">Description</th>
+                                    <th width="10%" style="text-align:center;">Quantity</th>
+                                    <th width="15%" style="text-align:center;">Unit Rate</th>
+                                    <th width="25%" style="text-align:center;"> Total Amount</th>
+                                </tr>
+                                </thead>
+                              {%- endif %}
+                              {%- endif %}
+                  {% endfor %}
+                  {%  if  doc.rounding_adjustment!=0 %}
+                  <tr>
+                    <td colspan="4" width="20%" style="font-weight:bold;text-align: center;"> 
+                      Rounding Adjustment
+                       
+                    </td>
+                   
+                    <td colspan="1" width="20%" style="font-weight:bold;text-align: right;">
+                     
+                        {{ doc.get_formatted("rounding_adjustment") }}
+
+                    </td>
+                </tr>
+                {%  endif %}
+                  <tr>
+              <td colspan="5" width="20%" style="text-align:center;font-weight:bold;">
+                 <div>&lt;&lt;&lt; Nothing Follows  &gt;&gt;&gt;</div>
+              </td>
+          </tr>
+          <tr>
+              <td colspan="4" width="20%" style="font-weight:bold;text-align: center;"> 
+                  Total PO Amount : {{ doc.in_words}}
+                 
+              </td>
+             
+              <td colspan="1" width="20%" style="font-weight:bold;text-align: right;">
+                {%  if  doc.rounding_adjustment!=0 %}
+                  {{ doc.get_formatted("rounded_total") }}
+                  {% else %}
+                  {{ doc.get_formatted("grand_total") }}
+                  {%  endif %}
+              </td>
+          </tr>
+      </table>
+  </div>
+  
+  <!-- Footer starts -->
+  <div   {%  if not break[0] %} style="position: absolute;bottom: 0;width: 100%;" {% else %}  style="position: absolute;width: 100%;" {% endif %} >
+  <table width="100%">
+          {%  if doc.terms and doc.terms|striptags|length >0 %}
+      <tr>
+          <td colspan="2">
+                  <span style="text-decoration: underline;font-weight:bold;font-size: 15px;">Terms and Condition: </span>
+          </td>
+      </tr>
+      <tr>
+        
+              <td colspan="2"> 
+                      {%  if doc.terms %}<div {%  if not break[0] %} class="word-wrap-5-lines" {% endif %}>{{  doc.terms  }}</div>{% endif %}
+              </td>
+          </tr>
+          {% endif %}
+          <tr>
+                  <td colspan="2" style="width:100%;margin-top:20px;text-align:center;font-weight:bold;font-family: Harlow Solid;">
+                          Thanks for your business
+                  </td>
+              </tr>
+              
+                  <tr>
+                    <td width="50%" style="text-align:center;">
+                            
+                                <div style="width: 100%;float:left;">
+                                    {% set u = frappe.get_doc("User", frappe.user) %}    
+                                    {{ u.first_name }} 
+                                <br><br>
+                            _________________________________<br><b> Approved By</b></div>
+
+                    </td>
+                    <td width="50%" style="text-align:center;">
+                            <div style="width: 100%;float:left;">
+                                Abdullah M AlHajri
+                            <br><br>
+                        _________________________________<br><b> Approved By</b></div>
+                    </td>
+                </tr>
+                
+  </table>
+  </div>
+  <!-- Footer End -->
+  </div>

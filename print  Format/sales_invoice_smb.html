@@ -1,0 +1,874 @@
+
+<!-- <script type="text/javascript">
+  var i = $("input[type='checkbox']:checked").val();
+   console.log(i);
+   console.log("hiii");
+</script> -->
+
+<style>
+    @page {
+        size: A4;
+    }
+    #table_td {
+
+        padding-right: 3px !important;
+        vertical-align: middle !important;
+        padding-left: 4px !important;
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
+
+    }
+   
+</style>
+
+
+<!-- <script type="text/javascript">
+    var i = $("input[type='checkbox']:checked").val();
+     console.log(i);
+    
+    if(i!="on")
+    {
+        $('#img').empty();
+
+        $(".btn-print-print").click(function(){
+            $('#img').css("display","none")
+
+});
+
+
+
+    }
+    
+  </script> -->
+
+<!-- Items table header -->
+{% set _total_before_disc = [0] %}
+{% set _total_items_disc = [0] %}
+
+{% if doc.items|selectattr("page_break")|list|count > 0 %}
+    {% set _autoPagebreakItemsCount = -1.1 %}
+    {% set _totalNoPages = doc.items|selectattr("page_break")|list|count + 1 %}
+{% else %}
+    {% set _autoPagebreakItemsCount = 20 %}
+    {% set _offset = 0 if (doc.items|count % _autoPagebreakItemsCount) == 0 else 1 %} {#To prevent incorrect totalPage no in case modulus is 0#}
+    {% set _totalNoPages = (doc.items|count/_autoPagebreakItemsCount)|int + _offset %}
+{%endif%}
+
+{% set pageNo = [1] %}
+
+<div style="font-size:12px;text-align: right">
+    {% set lh = frappe.form_dict.no_letterhead %}
+    {% if lh|int ==0 %}
+     <b> Page {{ pageNo[pageNo|count - 1] }} of {{ _totalNoPages }} </b>
+     {%endif%}    
+</div>
+<div style="padding-bottom:5px">
+<table width="100%">
+    <tr>
+        <td width="100%" >
+                {% set lh = frappe.form_dict.no_letterhead %}
+                {% if lh|int ==0 %}
+                    <div width="100%" id ="img">
+                            <center><img style="height: 70px;width: 100%;" src="/files/SMB_LetterHead.png"></center>
+                    </div>
+                    
+                    <hr>
+                    {%endif%}   
+                
+        </td>
+    </tr>
+</table>
+</div>
+{% set lh = frappe.form_dict.no_letterhead %}
+
+    {% if lh|int ==1 %}
+<br><br><br><br><br><br>
+{%endif%}   
+<div style="width:100%">
+    <div style="width:10%;float:left">
+        <!-- <b>Date:</b> -->
+    </div>
+    <div style="width:40%;float:left;padding-left: 8%;padding-top: 8px;">
+        {{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}
+    </div>
+    <div style="width:10%;float:right; text-align: right" dir="rtl">
+        <!-- <b>تاريخ:</b> -->
+    </div>
+    <div style="width:40%;float:right; text-align: right;padding-right: 15%;padding-top: 8px;" dir="rtl">
+        {{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}
+    </div>
+</div>
+{% set lh = frappe.form_dict.no_letterhead %}
+
+    {% if lh|int ==1 %}
+<br><br>
+{%endif%} 
+<div style="width:50%;float:left;text-transform:uppercase;font-size:13px;"><u><b>Invoice General</b></u>
+</div>
+<div style="width:50%; float:right; text-transform:uppercase; font-size:13px; text-align: right">
+    <b>الفاتورة العامة</b>
+</div>
+
+
+
+
+<div width="100%">
+    <div style="width:48%;height:160px;border:1px solid black;float:left;">
+
+        <div width=100%>
+            <div id="table_td" style="font-size:10px;width:33.33%;float:left"><b>To</b>
+            </div>
+            <div style="font-size:10px;width:33.33%;float:left"><b></b>
+            </div>
+            <div style="font-size:10px;width:33.33%;float:right"><b>فاتورة إلى</b>
+            </div>
+        </div><br>
+
+
+        <div width=100% style="margin-top:10px;">
+            <div id="table_td" style="font-size:10px;width:50%;float:left;word-wrap:break-word;"><b>{{doc.customer}}</b>
+            </div><span>
+                <div id="table_td" style="font-size:10px;width:50%;float:left;padding-left: 120px;word-wrap:break-word;">
+                    {% if frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic')!=None %}
+                    <b>{{ frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic') }}</b>
+                    {% endif %}
+                </div>
+            </span>
+        </div><br><br>
+
+
+        <div width="100%">
+            <div id="table_td" style="float: left;width: 50%;font-weight: bold;font-size:10px;">
+                <div style="width:30%;float: left;">
+                    C.R.No:
+                </div>
+
+                {% if frappe.db.get_value('Customer', doc.customer, 'crn')!=None %}
+                <div id="table_td" style="float: left;width: 70%;">
+                    {% if frappe.db.get_value('Customer', doc.customer, 'crn')!=None %}
+                    {{ frappe.db.get_value('Customer', doc.customer, 'crn') }}
+                    {% endif %}
+                </div>
+
+                {% endif %}
+            </div>
+            <div id="table_td" style="float: left;width:50%;font-weight: bold;font-size:10px;">
+                <div style="width:30%;float: left;">
+                    VAT ID:
+                </div>
+                {% if frappe.db.get_value('Customer', doc.customer, 'tax_id')!=None %}
+                <div style="float: left;width: 70%;">
+                    {% if frappe.db.get_value('Customer', doc.customer, 'tax_id')!=None %}
+                    {{ frappe.db.get_value('Customer', doc.customer, 'tax_id') }}
+                    {% endif %}
+                </div>
+
+                {% endif %}
+            </div>
+        </div>
+
+
+        <div width=100% style="margin-top: 20px;">
+            <div id="table_td" style="font-size:10px;float:left;word-wrap:break-word;">
+                
+               
+              {% set dynamic_link = frappe.get_list('Dynamic Link', filters={'link_name':
+              doc.customer,'parenttype':"Address",'link_doctype':"Customer"}, fields=['parent'],order_by='creation') %}
+              
+              {% if dynamic_link %}
+                {% if dynamic_link[0]['parent'] -%}
+               
+                {% set address = frappe.get_doc("Address",dynamic_link[0]['parent']) %}
+                
+                {%- if address.address_line1 -%}
+                {{ address.address_line1 }},
+                {%-endif-%}
+                {% if address.address_line2 %}
+                {{ address.address_line2 }}
+                {%-endif%}<br>
+                {% if address.city %}
+                {{ address.city }},
+                {% if address.county -%}
+                {{ address.county}} {%-endif%}<br>
+                {% if address.pincode %}
+                {{ address.pincode }}<br>
+                {%-endif%}
+                {%-endif%}
+                {%-endif%}
+                {%-endif%}
+                
+            </div>
+            <!-- <div style="font-size:10px;width:50%;float:left;word-wrap:break-word;padding-left: 0px;padding-top: 14px"><b>{{doc.cost_center}}</b>
+            </div> -->
+        </div><br>
+        <div width=100%>
+            <div id="table_td" style="font-size:10px;float:left;word-wrap:break-word;">
+            </div>
+            <!-- <div style="font-size:10px;width:50%;float:left;word-wrap:break-word;padding-left: 0px;padding-top: 14px"><b>{{doc.cost_center}}</b>
+            </div> -->
+        </div><br>
+        <div width=100%>
+            <div id="table_td" style="font-size:10px;width:50%;float:left;word-wrap:break-word;">Mobile:
+            </div>
+            <div style="font-size:10px;width:50%;float:left;word-wrap:break-word;padding-left: 0px;"><b></b>
+                {% set dynamic_link = frappe.get_list('Dynamic Link', filters={'link_name':
+              doc.customer,'parenttype':"Address",'link_doctype':"Customer"}, fields=['parent'],order_by='creation') %}
+              {% if dynamic_link %}
+                {% set address = frappe.get_doc("Address",dynamic_link[0]['parent']) %}
+                {%- if address.phone != None -%}
+                {{ address.phone }}
+                {%- else -%}
+                {{""}}
+                {%-endif%} 
+                {%-endif%} 
+            </div>
+        </div><br>
+
+    </div>
+</div>
+
+<div style="width:4%;height:140px;float:left;">
+</div>
+
+
+<div style="width:48%;height:180px;border:1px solid white;float:left;">
+    <table width="100%" height="160px" border=1>
+        <tr style="border-bottom: 1px solid black;">
+            <td id="table_td" width="30.33%">رقم الفاتورة<br>
+                Invoice No:
+            </td>
+            <td width="39.33%" style="font-weight: bold;" id="table_td" style="border-bottom: 1px solid black;">
+                {{ doc.name }}
+            </td>
+        </tr>
+        <tr style="border-bottom: 1px solid black;">
+            <td id="table_td" width="30.33%">
+                تاريخ<br>Date:
+            </td>
+            <td width="39.33%" style="font-weight: bold;" id="table_td">
+                {{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}
+            </td>
+        </tr>
+        <tr>
+            <td id="table_td" width="30.33%">
+                ‫طلب‬ ‫رقم‬‫الشراء‬<br>PO.Ref.:
+            </td>
+            <td width="39.33%" style="font-weight: bold;" id="table_td">
+                
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div style="width:100%">
+    <div style="width:50%;float:left">
+        <b>Our VAT ID:</b>
+        {% if frappe.db.get_value('Company', doc.company, 'tax_id')!=None %}
+        {{ frappe.db.get_value('Company', doc.company, 'tax_id') }}
+        {% endif %}
+    </div>
+    <div style="width:50%;float:right; text-align: right" dir="rtl">
+        <b>معرف ضريبة القيمة المضافة لدينا:</b>
+        {% if frappe.db.get_value('Company', doc.company, 'tax_id_in_arabic')!=None %}
+        {{ frappe.db.get_value('Company', doc.company, 'tax_id_in_arabic') }}
+        {% endif %}
+    </div>
+</div>
+
+
+<div>
+    </table>
+    {% set lh = frappe.form_dict.no_letterhead %}
+    {% if lh|int ==0 %}
+        <div style="position:relative; height:800px;"> 
+    {% else %}
+        <div style="position:relative; height:740px;">
+    {% endif %}
+    <table border="1">
+        <thead>
+            <tr>
+                <th style="width:5%;font-size:9px;text-align:center;">الأب رقم<br>Sr.No</th>
+                <th style="width:40%;font-size:9px;word-wrap:break-word;text-align:center;">‫وصف‬<br>Description</th>
+                <th style="width:8%;font-size:9px;text-align:center;">‫كمیة‬<br>Oty</th>
+                <th style="width:8%;font-size:9px;text-align:center;"> ‫وحدة‬<br> Unit</th>
+                <th style="width:18%;font-size:9px;text-align:center;">‫السعر‬ <br>Rate/Unit </th>
+                <th style="width:18%;font-size:9px;text-align:center;">‫كمیة‬<br>Amount&nbsp;&nbsp;&nbsp;&nbsp;SR</th>
+            </tr>
+        </thead>
+
+        {%- for row in doc.items -%}
+    <!-- item row -->
+    <tr>
+        <td style="width: 3%;font-size:9px;">{{ row.idx }}</td>
+        <td style="width: 7%;font-size:9px;text-align:left">
+            <div style="border: 0px;overflow-wrap: break-word;">{{ row.description }}</div>
+        </td>
+
+        <td style="width: 10%;font-size:9px;text-align:right;">{{ row.qty }}</td>
+
+
+        <td style="width: 10%;font-size:9px;text-align:right;">{{ row.uom or row.stock_uom }}</td>
+        <td style="width: 12%;font-size:9px;text-align:right;">{{row.get_formatted("rate", doc) }}</td>
+        <td style="width: 10%;font-size:9px;text-align:right;">{{row.get_formatted("amount", doc) }}</td>
+
+    </tr>
+    {% if (row.page_break or loop.index % _autoPagebreakItemsCount == 0) -%}
+    {% if(row.page_break or loop.index < doc.items|count ) %} {#Skip Last item Page break#} {% set __=pageNo.append(pageNo.pop() + 1)
+        %} 
+</table>
+            </div>
+            <div class="page-break"></div>
+<!-- <h6 style="color:white">1</h6> -->
+
+<div style="font-size:12px;text-align: right">
+    {% set lh = frappe.form_dict.no_letterhead %}
+    {% if lh|int ==0 %}
+    <b> Page {{ pageNo[pageNo|count - 1] }} of {{ _totalNoPages }} </b>
+    {%endif%}  </div>
+<div style="padding-bottom:5px">
+<table width="100%">
+    <tr>
+        <td width="100%" >
+                {% if lh|int ==0 %}
+                    <div width="100%" id ="img">
+                            <center><img style="height: 70px;width: 100%;" src="/files/SMB_LetterHead.png"></center>
+                    </div>
+                    <hr>
+                {%endif%}
+        </td>
+    </tr>
+</table>
+</div>
+{% set lh = frappe.form_dict.no_letterhead %}
+
+    {% if lh|int ==1 %}
+<br><br><br><br><br><br>
+{%endif%}  
+<div style="width:100%">
+    <div style="width:10%;float:left">
+        <!-- <b>Date:</b> -->
+    </div>
+    <div style="width:40%;float:left;padding-left: 8%;padding-top: 8px;">
+        {{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}
+    </div>
+    <div style="width:10%;float:right; text-align: right" dir="rtl">
+        <!-- <b>تاريخ:</b> -->
+    </div>
+    <div style="width:40%;float:right; text-align: right;padding-right: 15%;padding-top: 8px;" dir="rtl">
+        {{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}
+    </div>
+</div>
+<br><br>
+<div style="width:50%;float:left;text-transform:uppercase;font-size:13px;"><u><b>Invoice General</b></u>
+</div>
+<div style="width:50%; float:right; text-transform:uppercase; font-size:13px; text-align: right">
+    <b>الفاتورة العامة</b>
+</div>
+
+
+
+<div width="100%">
+    <div style="width:48%;height:160px;border:1px solid black;float:left;">
+
+        <div width=100%>
+            <div id="table_td" style="font-size:10px;width:33.33%;float:left"><b>To</b>
+            </div>
+            <div style="font-size:10px;width:33.33%;float:left"><b></b>
+            </div>
+            <div style="font-size:10px;width:33.33%;float:right"><b>فاتورة إلى</b>
+            </div>
+        </div><br>
+
+
+        <div width=100% style="margin-top:10px;">
+            <div id="table_td" style="font-size:10px;width:50%;float:left;word-wrap:break-word;"><b>{{doc.customer}}</b>
+            </div><span>
+                <div id="table_td" style="font-size:10px;width:50%;float:left;padding-left: 120px;word-wrap:break-word;">
+                    {% if frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic')!=None %}
+                    <b>{{ frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic') }}</b>
+                    {% endif %}
+                </div>
+            </span>
+        </div><br><br>
+
+
+        <div width="100%">
+            <div id="table_td" style="float: left;width: 50%;font-weight: bold;font-size:10px;">
+                <div style="width:30%;float: left;">
+                    C.R.No:
+                </div>
+
+                {% if frappe.db.get_value('Customer', doc.customer, 'crn')!=None %}
+                <div id="table_td" style="float: left;width: 70%;">
+                    {% if frappe.db.get_value('Customer', doc.customer, 'crn')!=None %}
+                    {{ frappe.db.get_value('Customer', doc.customer, 'crn') }}
+                    {% endif %}
+                </div>
+
+                {% endif %}
+            </div>
+            <div id="table_td" style="float: left;width:50%;font-weight: bold;font-size:10px;">
+                <div style="width:30%;float: left;">
+                    VAT ID:
+                </div>
+                {% if frappe.db.get_value('Customer', doc.customer, 'tax_id')!=None %}
+                <div style="float: left;width: 70%;">
+                    {% if frappe.db.get_value('Customer', doc.customer, 'tax_id')!=None %}
+                    {{ frappe.db.get_value('Customer', doc.customer, 'tax_id') }}
+                    {% endif %}
+                </div>
+
+                {% endif %}
+            </div>
+        </div>
+
+
+        <div width=100% style="margin-top: 20px;">
+            <div id="table_td" style="font-size:10px;float:left;word-wrap:break-word;">
+                {% set dynamic_link = frappe.get_list('Dynamic Link', filters={'link_name':
+              doc.customer,'parenttype':"Address",'link_doctype':"Customer"}, fields=['parent'],order_by='creation') %}
+              
+              {% if dynamic_link %}
+                {% if dynamic_link[0]['parent'] -%}
+               
+                {% set address = frappe.get_doc("Address",dynamic_link[0]['parent']) %}
+                
+                {%- if address.address_line1 -%}
+                {{ address.address_line1 }},
+                {%-endif-%}
+                {% if address.address_line2 %}
+                {{ address.address_line2 }}
+                {%-endif%}<br>
+                {% if address.city %}
+                {{ address.city }},
+                {% if address.county -%}
+                {{ address.county}} {%-endif%}<br>
+                {% if address.pincode %}
+                {{ address.pincode }}<br>
+                {%-endif%}
+                {%-endif%}
+                {%-endif%}
+                {%-endif%}
+            </div>
+            <!-- <div style="font-size:10px;width:50%;float:left;word-wrap:break-word;padding-left: 0px;padding-top: 14px"><b>{{doc.cost_center}}</b>
+            </div> -->
+        </div><br>
+        <div width=100%>
+            <div id="table_td" style="font-size:10px;float:left;word-wrap:break-word;">
+            </div>
+            <!-- <div style="font-size:10px;width:50%;float:left;word-wrap:break-word;padding-left: 0px;padding-top: 14px"><b>{{doc.cost_center}}</b>
+            </div> -->
+        </div><br>
+        <div width=100%>
+            <div id="table_td" style="font-size:10px;width:50%;float:left;word-wrap:break-word;">Mobile:
+            </div>
+            <div style="font-size:10px;width:50%;float:left;word-wrap:break-word;padding-left: 0px;"><b></b>
+                {% set dynamic_link = frappe.get_list('Dynamic Link', filters={'link_name':
+                doc.customer,'parenttype':"Address",'link_doctype':"Customer"}, fields=['parent'],order_by='creation') %}
+                {% if dynamic_link %}
+                  {% set address = frappe.get_doc("Address",dynamic_link[0]['parent']) %}
+                  {%- if address.phone != None -%}
+                  {{ address.phone }}
+                  {%- else -%}
+                  {{""}}
+                  {%-endif%} 
+                  {%-endif%} 
+            </div>
+        </div><br>
+
+    </div>
+</div>
+
+<div style="width:4%;height:140px;float:left;">
+</div>
+
+
+<div style="width:48%;height:180px;border:1px solid white;float:left;">
+    <table width="100%" height="160px" border=1>
+        <tr style="border-bottom: 1px solid black;">
+            <td id="table_td" width="30.33%">رقم الفاتورة<br>
+                Invoice No:
+            </td>
+            <td width="39.33%" style="font-weight: bold;" id="table_td" style="border-bottom: 1px solid black;">
+                {{ doc.name }}
+            </td>
+        </tr>
+        <tr style="border-bottom: 1px solid black;">
+            <td id="table_td" width="30.33%">
+                تاريخ<br>Date:
+            </td>
+            <td width="39.33%" style="font-weight: bold;" id="table_td">
+                {{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}
+            </td>
+        </tr>
+        <tr>
+            <td id="table_td" width="30.33%">
+                ‫طلب‬ ‫رقم‬‫الشراء‬<br>PO.Ref.:
+            </td>
+            <td width="39.33%" style="font-weight: bold;" id="table_td">
+                
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div style="width:100%">
+        <div style="width:50%;float:left">
+            <b>Our VAT ID:</b>
+            {% if frappe.db.get_value('Company', doc.company, 'tax_id')!=None %}
+            {{ frappe.db.get_value('Company', doc.company, 'tax_id') }}
+            {% endif %}
+        </div>
+        <div style="width:50%;float:right; text-align: right" dir="rtl">
+            <b>معرف ضريبة القيمة المضافة لدينا:</b>
+            {% if frappe.db.get_value('Company', doc.company, 'tax_id_in_arabic')!=None %}
+            {{ frappe.db.get_value('Company', doc.company, 'tax_id_in_arabic') }}
+            {% endif %}
+        </div>
+    </div>
+
+    </table>
+    {% set lh = frappe.form_dict.no_letterhead %}
+    {% if lh|int ==0 %}
+        <div style="position:relative; height:800px;"> 
+    {% else %}
+        <div style="position:relative; height:740px;">
+    {% endif %} 
+        <table border="1">
+            <thead>
+                <tr>
+                    <th style="width:5%;font-size:9px;text-align:center;">الأب رقم<br>Sr.No</th>
+                    <th style="width:40%;font-size:9px;word-wrap:break-word;text-align:center;">‫وصف‬<br>Description</th>
+                    <th style="width:8%;font-size:9px;text-align:center;">‫كمیة‬<br>Oty</th>
+                    <th style="width:8%;font-size:9px;text-align:center;"> ‫وحدة‬<br> Unit</th>
+                    <th style="width:18%;font-size:9px;text-align:center;">‫السعر‬ <br>Rate/Unit </th>
+                    <th style="width:18%;font-size:9px;text-align:center;">‫كمیة‬<br>Amount&nbsp;&nbsp;&nbsp;&nbsp;SR</th>
+                </tr>
+            </thead>
+
+        {%- endif %}
+        {%- endif %}
+
+        {%- endfor -%}
+        <!-- <tbody>
+            <tr>
+                <td colspan="2" style="font-size:9px;">Total Amount-&nbsp;&nbsp;المبلغ الإجمالي</td>
+                <td style="width: 8%;font-size:9px;text-align:right;"><b>{{ doc.items|sum(attribute='qty') }}</b></td>
+                <td style="width: 8%;font-size:9px;text-align:left;"></td>
+                <td style="width: 18%;font-size:9px;text-align:left;"></td>
+                <td style="width: 18%;font-size:9px;text-align: right">{{doc.get_formatted("total") }}</td>
+            </tr>
+        </tbody> -->
+    </table>
+    {% if doc.items|count%_autoPagebreakItemsCount > 11 or doc.items|count%_autoPagebreakItemsCount ==0 -%}
+    </div>
+<div class="page-break"></div> 
+    
+<table width="100%">
+        <tr>
+            <td width="100%" >
+                    {% if lh|int ==0 %}
+                        <div width="100%" id ="img">
+                                <center><img style="height: 70px;width: 100%;" src="/files/SMB_LetterHead.png"></center>
+                        </div>
+                        <hr>
+                    {%endif%}
+                
+            </td>
+        </tr>
+    </table>
+    </div>
+    {% set lh = frappe.form_dict.no_letterhead %}
+
+    {% if lh|int ==1 %}
+<br><br><br><br><br><br>
+{%endif%}  
+<div style="width:100%">
+    <div style="width:10%;float:left">
+        <!-- <b>Date:</b> -->
+    </div>
+    <div style="width:40%;float:left;padding-left: 8%;padding-top: 8px;">
+        {{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}
+    </div>
+    <div style="width:10%;float:right; text-align: right" dir="rtl">
+        <!-- <b>تاريخ:</b> -->
+    </div>
+    <div style="width:40%;float:right; text-align: right;padding-right: 15%;padding-top: 8px;" dir="rtl">
+        {{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}
+    </div>
+</div>
+    <br><br>
+    <div style="width:50%;float:left;text-transform:uppercase;font-size:13px;"><u><b>Invoice General</b></u>
+    </div>
+    <div style="width:50%; float:right; text-transform:uppercase; font-size:13px; text-align: right">
+        <b>الفاتورة العامة</b>
+    </div>
+
+
+
+    <div width="100%">
+        <div style="width:48%;height:160px;border:1px solid black;float:left;">
+
+            <div width=100%>
+                <div id="table_td" style="font-size:10px;width:33.33%;float:left"><b>To</b>
+                </div>
+                <div style="font-size:10px;width:33.33%;float:left"><b></b>
+                </div>
+                <div style="font-size:10px;width:33.33%;float:right"><b>فاتورة إلى</b>
+                </div>
+            </div><br>
+
+
+            <div width=100% style="margin-top:10px;">
+                <div id="table_td" style="font-size:10px;width:50%;float:left;word-wrap:break-word;"><b>{{doc.customer}}</b>
+                </div><span>
+                    <div id="table_td" style="font-size:10px;width:50%;float:left;padding-left: 120px;word-wrap:break-word;">
+                        {% if frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic')!=None %}
+                        <b>{{ frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic') }}</b>
+                        {% endif %}
+                    </div>
+                </span>
+            </div><br><br>
+
+
+            <div width="100%">
+                <div id="table_td" style="float: left;width: 50%;font-weight: bold;font-size:10px;">
+                    <div style="width:30%;float: left;">
+                        C.R.No:
+                    </div>
+
+                    {% if frappe.db.get_value('Customer', doc.customer, 'crn')!=None %}
+                    <div id="table_td" style="float: left;width: 70%;">
+                        {% if frappe.db.get_value('Customer', doc.customer, 'crn')!=None %}
+                        {{ frappe.db.get_value('Customer', doc.customer, 'crn') }}
+                        {% endif %}
+                    </div>
+
+                    {% endif %}
+                </div>
+                <div id="table_td" style="float: left;width:50%;font-weight: bold;font-size:10px;">
+                    <div style="width:30%;float: left;">
+                        VAT ID:
+                    </div>
+                    {% if frappe.db.get_value('Customer', doc.customer, 'tax_id')!=None %}
+                    <div style="float: left;width: 70%;">
+                        {% if frappe.db.get_value('Customer', doc.customer, 'tax_id')!=None %}
+                        {{ frappe.db.get_value('Customer', doc.customer, 'tax_id') }}
+                        {% endif %}
+                    </div>
+
+                    {% endif %}
+                </div>
+            </div>
+
+
+            <div width=100% style="margin-top: 20px;">
+                <div id="table_td" style="font-size:10px;float:left;word-wrap:break-word;">
+                    {% set dynamic_link = frappe.get_list('Dynamic Link', filters={'link_name':
+              doc.customer,'parenttype':"Address",'link_doctype':"Customer"}, fields=['parent'],order_by='creation') %}
+              
+              {% if dynamic_link %}
+                {% if dynamic_link[0]['parent'] -%}
+               
+                {% set address = frappe.get_doc("Address",dynamic_link[0]['parent']) %}
+                
+                {%- if address.address_line1 -%}
+                {{ address.address_line1 }},
+                {%-endif-%}
+                {% if address.address_line2 %}
+                {{ address.address_line2 }}
+                {%-endif%}<br>
+                {% if address.city %}
+                {{ address.city }},
+                {% if address.county -%}
+                {{ address.county}} {%-endif%}<br>
+                {% if address.pincode %}
+                {{ address.pincode }}<br>
+                {%-endif%}
+                {%-endif%}
+                {%-endif%}
+                {%-endif%}
+                </div>
+                <!-- <div style="font-size:10px;width:50%;float:left;word-wrap:break-word;padding-left: 0px;padding-top: 14px"><b>{{doc.cost_center}}</b>
+                </div> -->
+            </div><br>
+            <div width=100%>
+                <div id="table_td" style="font-size:10px;float:left;word-wrap:break-word;">
+                </div>
+                <!-- <div style="font-size:10px;width:50%;float:left;word-wrap:break-word;padding-left: 0px;padding-top: 14px"><b>{{doc.cost_center}}</b>
+                </div> -->
+            </div><br>
+            <div width=100%>
+                <div id="table_td" style="font-size:10px;width:50%;float:left;word-wrap:break-word;">Mobile:
+                </div>
+                <div style="font-size:10px;width:50%;float:left;word-wrap:break-word;padding-left: 0px;"><b></b>
+                    {% set dynamic_link = frappe.get_list('Dynamic Link', filters={'link_name':
+                    doc.customer,'parenttype':"Address",'link_doctype':"Customer"}, fields=['parent'],order_by='creation') %}
+                    {% if dynamic_link %}
+                      {% set address = frappe.get_doc("Address",dynamic_link[0]['parent']) %}
+                      {%- if address.phone != None -%}
+                      {{ address.phone }}
+                      {%- else -%}
+                      {{""}}
+                      {%-endif%} 
+                      {%-endif%} 
+                </div>
+            </div><br>
+
+        </div>
+    </div>
+
+    <div style="width:4%;height:140px;float:left;">
+    </div>
+
+
+    <div style="width:48%;height:180px;border:1px solid white;float:left;">
+        <table width="100%" height="160px" border=1>
+            <tr style="border-bottom: 1px solid black;">
+                <td id="table_td" width="30.33%">رقم الفاتورة<br>
+                    Invoice No:
+                </td>
+                <td width="39.33%" style="font-weight: bold;" id="table_td" style="border-bottom: 1px solid black;">
+                    {{ doc.name }}
+                </td>
+            </tr>
+            <tr style="border-bottom: 1px solid black;">
+                <td id="table_td" width="30.33%">
+                    تاريخ<br>Date:
+                </td>
+                <td width="39.33%" style="font-weight: bold;" id="table_td">
+                    {{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}
+                </td>
+            </tr>
+            <tr>
+                <td id="table_td" width="30.33%">
+                    ‫طلب‬ ‫رقم‬‫الشراء‬<br>PO.Ref.:
+                </td>
+                <td width="39.33%" style="font-weight: bold;" id="table_td">
+                    
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="width:100%">
+            <div style="width:50%;float:left">
+                <b>Our VAT ID:</b>
+                {% if frappe.db.get_value('Company', doc.company, 'tax_id')!=None %}
+                {{ frappe.db.get_value('Company', doc.company, 'tax_id') }}
+                {% endif %}
+            </div>
+            <div style="width:50%;float:right; text-align: right" dir="rtl">
+                <b>معرف ضريبة القيمة المضافة لدينا:</b>
+                {% if frappe.db.get_value('Company', doc.company, 'tax_id_in_arabic')!=None %}
+                {{ frappe.db.get_value('Company', doc.company, 'tax_id_in_arabic') }}
+                {% endif %}
+            </div>
+        </div>
+    
+        {% set lh = frappe.form_dict.no_letterhead %}
+        {% if lh|int ==0 %}
+            <div style="position:relative; height:800px;"> 
+        {% else %}
+            <div style="position:relative; height:790px;">
+        {% endif %}
+    {%-endif%}
+        <div style="position: absolute; bottom: 0; width: 100%;">
+            <table width="100%" border=1">
+                <tr>
+        
+                    <td rowspan="5" style="font-weight:bold;font-size:10px;width:50%;">
+        
+                        <div style="font-weight:bold;font-size:10px;margin-top: 120px;">
+                            {% if doc.total_in_words-%}
+                            {{doc.total_in_words}}
+                            {%-endif%}
+                            {% if doc.grand_total !=None %}
+                            <br>{{ frappe.utils.money_in_words(doc.grand_total) }}
+                            {%- endif %}
+                        </div>
+                    </td>
+                    <td style="font-size:10px;width:25%;font-weight:bold;">المجموع قبل ضريبة القيمة المضافة<br>Total Before VAT
+                    </td>
+                    <td style="font-size:10px;width:25%;text-align:right;font-weight:bold;">
+                        {{doc.total}}
+                    </td>
+                </tr>
+        
+                <tr>
+                    <td style="font-size:10px;width:25%;font-weight:bold;">خصم<br>Discount
+                    </td>
+                    <td style="font-size:10px;width:25%;text-align:right;font-weight:bold;">
+                        {%- for row in doc.taxes -%}
+                        {% set d= "Discount -" %}
+                        
+                        {% if d in row.account_head  -%}
+                        {{ row.get_formatted("tax_amount", doc) }}
+                        {%- endif -%}
+                        {%- endfor -%}
+                    </td>
+                </tr>
+                    
+                <tr>
+        
+                    <td style="font-size:10px;width:25%;font-weight:bold;">قيمة الضريبة<br>VAT Amount
+                    </td>
+                    <td style="font-size:10px;width:25%;text-align:right;font-weight:bold;">
+                        {%- for row in doc.taxes -%}
+                        {% set d= "VAT 5% - " %}
+                        
+                        {% if d in row.account_head  -%}
+                        {{ row.get_formatted("tax_amount", doc) }}
+                        {%- endif -%}
+                        {%- endfor -%}
+                    </td>
+                </tr>
+        
+                <tr>
+                    <td style="font-size:10px;width:25%;font-weight:bold;">‫ إضافة. كمية<br>Add. Amount
+                    </td>
+                    <td style="font-size:10px;width:25%;text-align:right;font-weight:bold;">
+                        0
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="font-size:10px;width:25%;font-weight:bold;">صالقيمة الصافية بعد الضريبة على القيمة المضافة<br>Net Value After VAT
+                    </td>
+                    <td style="font-size:10px;width:25%;font-weight:bold;text-align:right;">
+                        {{doc.get_formatted("grand_total")}}
+                    </td>
+                </tr>
+            </table>
+
+
+            <table width="100%" style="margin-top:18px;position: absolute;">
+                <tr>
+                    <td width="25%" style="border-bottom: 1px solid black;">
+                    </td>
+                    <td width="25%" style="border-bottom: 1px solid black;">
+                    </td>
+        
+                    <td width="25%" style="border-bottom: 1px solid black;">
+                    </td>
+                    <td width="25%" style="border-bottom: 1px solid black;">
+                    </td>
+                </tr>
+                <tr>
+                    <td id="table_td" width="33.33%" style="text-align: center;">
+                        محاسب<br>Accountant
+                    </td>
+                    <td id="table_td" width="33.33%" style="text-align: center;">
+                        المدير المالي
+                        <br>Finance Manager
+                    </td>
+                    <td id="table_td" width="33.33%" style="text-align: center;">
+                        تلقى من قبل<br>Received By
+                    </td>
+                </tr>
+            </table>
+        </div></div>
+</div>
+
+
+

@@ -1,0 +1,815 @@
+
+<style>
+        @page {
+            size: A4;
+        }
+    
+      
+    .print-format{
+        width: 21.5cm;
+        padding: 0.25in;
+        height: 28cm;
+    font-size:7pt
+    }
+    
+    .print-format td{
+        padding : 2px !important;
+    }
+    
+        #headtd
+        {
+            background-color:#bbbec1;
+            /* color: white; */
+        }
+        #word-wrap {
+        /* max-width: 100px;
+   
+    
+    white-space: nowrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word; */ 
+    overflow: hidden;
+    text-overflow: ellipsis;
+     display: -webkit-box;
+    -webkit-box-orient: vertical;
+   -webkit-line-clamp: 2; 
+
+    }
+    #address {
+        /* max-width: 100px;
+   
+    
+    white-space: nowrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word; */ 
+    overflow: hidden;
+    text-overflow: ellipsis;
+     display: -webkit-box;
+    -webkit-box-orient: vertical;
+   -webkit-line-clamp: 4; 
+
+    }
+
+    </style>
+    {% set _total_before_disc = [0] %}
+    {% set _total_items_disc = [0] %}
+    
+    {% if doc.items|selectattr("page_break")|list|count > 0 %}
+        {% set _autoPagebreakItemsCount = -1.1 %}
+        {% set _totalNoPages = doc.items|selectattr("page_break")|list|count + 1 %}
+    {% else %}
+        {% set _autoPagebreakItemsCount = 15 %}
+        {% set _offset = 0 if (doc.items|count % _autoPagebreakItemsCount) == 0 else 1 %} {#To prevent incorrect totalPage no in case modulus is 0#}
+        {% set _totalNoPages = (doc.items|count/_autoPagebreakItemsCount)|int + _offset %}
+    {%endif%}
+    
+    {% set pageNo = [1] %}
+    
+    <div  style="font-size:12px;float: right; text-align: right;padding-top: 100px;"><b> Page {{ pageNo[pageNo|count - 1]  }} of {{  _totalNoPages  }} </b></div>
+    
+    <table width="100%" border="1" >
+            <tr>
+                <td width = "60%" rowspan="6"><h4><center><b>SALES INVOICE /فاتورة مبيعات</b></center></h4><BR>
+                   
+                        <!-- <label id="headtd"> Bill To</label> <br> -->
+                        <div style="width: 30%;background:gray;color:white;font-size: 15px;">Bill To<br>أسم المفوتر</div>
+                    
+                    <div style="width:50%;float:left;">
+                        <b>{{doc.customer}}</b><br>
+                        <b style="word-wrap:break-word;">
+                                {% if frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic')!=None %}
+                                    {{ frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic') }}
+                                {% endif %}
+                        </b><br>
+                        <div id ="address" style="width:100%;">
+                                {% if doc.address_display %}
+                                     {{doc.address_display}}
+                                {%endif%}
+                    </div>
+                    </div>
+                    <div style="width:50%;float:right;">
+                       
+                        
+                           <b> VAT REG.# &nbsp;&nbsp;&nbsp;{% if frappe.db.get_value('Customer', doc.customer, 'tax_id')!=None %}
+                            {{ frappe.db.get_value('Customer', doc.customer, 'tax_id') }}
+                            {% endif %}</b>
+            
+                        </div>
+            
+                
+                </td>
+                <td width="40%" colspan="2" id="headtd">
+                        <b>CR No.&nbsp;&nbsp;&nbsp;</b><br>
+                    
+                    <b>VAT REG.# </b>:&nbsp&nbsp{% if frappe.db.get_value('Company', doc.company, 'tax_id')!=None %}
+                        {{ frappe.db.get_value('Company', doc.company, 'tax_id') }}
+                        {% endif %}
+                    <br>رقم التسجيل بضريبة القيمة المضافة </td>
+                
+            </tr>
+            <tr>
+                <td id="headtd" width="20%"><center><b>INVOICE NO</b> <br>رقم الفاتورة</center></td>
+                <td  width="20%" id="headtd"><center><b>DATE<br>تاريخ الفاتورة</b></center></td>    
+            </tr>
+            <tr>
+                <td  width="20%"><center>{{doc.name}}</center></td>
+                <td  width="20%"><center>{{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}</center></td>
+            </tr>
+            <tr>
+                <td id="headtd" width="20%"><center><b>CURRENCY<br>نوع العملة</b></cennter></td>
+                <td  width="20%" id="headtd"><center><b>TERMS<br>شروط السداد</b></center></td>    
+            </tr>
+            <tr>
+                <td  width="20%"><center>{{doc.currency}}</center></td>
+                <td  width="20%"><center>
+                    {%if doc.payment_terms_template %}
+                    {{ doc.payment_terms_template }}
+                    {%endif%}
+                </center></td>
+            </tr>
+            <tr>
+                <td width="20%" id="headtd"><b> OUR REF NO :</b></td>
+                <td width="20%"><b>
+                    {%if doc.project%}
+                    {{ doc.project }}
+                {%endif%}</b></td>
+            </tr>
+            <tr>
+             
+        
+        
+            </tr>
+        </table>
+    
+        <table border="1" width="100%">
+            <tr>
+                <td colspan="4"> <center><b>SHIPPING DETAILS<br>بيانات الشحن</b></center>
+    
+                </td>
+            </tr>
+            <tr>
+                <td width="20%" id="headtd"><b>Shipper #<br>أسم الشاحن</b></td>
+                <td width="30%"><b>{%if doc.shipper%}{{doc.shipper}}{%endif%}</b></td>
+                <td width="20%" id="headtd"><b>Consignee #<br>أسم المستلم</b></td>
+                <td width="30%" >
+                    <b>
+                        {%if doc.consignee%}
+                            {{doc.consignee}}
+                        {%endif%}
+                    </b>
+                </td>
+            </tr>
+            <tr>
+                        <td width="20%" id="headtd"><b>VSL / Airline<br>أسم الباخرة/خط الطيران</b>
+        
+                        </td>
+                        <td width="30%"> {%if doc.vsl_or_airline_%}
+                                {{doc.vsl_or_airline_}}
+                               {%endif%}
+        
+                        </td>
+            
+                    <td width="20%" id="headtd"><b>Voy / Flt  #</b>
+    
+                    </td>
+                    <td width="30%"> {% if doc.voy_flt %}
+                            {{doc.voy_flt}}
+                            {%endif%}
+    
+                    </td>
+                </tr>
+                <tr>
+                        <td width="20%" id="headtd"><b>Port of  Loading<br>ميناء التحميل</b>
+        
+                        </td>
+                        <td width="30%"> {%if doc.port_of__loading_%}
+                                {{doc.port_of__loading_}}
+                               {%endif%}
+        
+                        </td>
+                    
+                            <td width="20%" id="headtd"><b>Port of Destination<br>ميناء الوصول</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.port_of_destination_%}
+                                    {{doc.port_of_destination_}}
+                                   {%endif%}
+            
+                            </td>
+                </tr>
+                
+                <tr>
+                        <td width="20%" id="headtd"><b>E.T.D.<br>تاريخ المغادرة</b>
+        
+                        </td>
+                        <td width="30%"> {%if doc.etd%}
+                                {{doc.etd}}
+                               {%endif%}
+        
+                        </td>
+                    
+                            <td width="20%" id="headtd"><b>E.T.A.<br>تاريخ الوصول</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.eta%}
+                                    {{doc.eta}}
+                                   {%endif%}
+            
+                            </td>
+                </tr>
+                <tr>
+                        <td width="20%" id="headtd"><b>MBL / MAWB #<br>رقم البوليصة/بحري-جوي</b>
+        
+                        </td>
+                        <td width="30%"> {%if doc.mbl_or_mawb_%}
+                                {{doc.mbl_or_mawb_}}
+                               {%endif%}
+        
+                        </td>
+                    
+                            <td width="20%" id="headtd"><b>HBL / HAWB #<br>رقم البوليصة</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.hbl_or_hawb%}
+                                    {{doc.hbl_or_hawb}}
+                                   {%endif%}
+            
+                            </td>
+                </tr>
+                <tr>
+                        <td width="20%" id="headtd"><b>TYPE OF SHPT<br>نوع الشحنة</b>
+        
+                        </td>
+                        <td width="30%"> {%if doc.type_of_shpt_%}
+                                {{doc.type_of_shpt_}}
+                               {%endif%}
+        
+                        </td>
+                    
+                            <td width="20%" id="headtd"><b>CARGO DETAILS<br>تفاصيل الطرود</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.cargo_details%}
+                                    {{doc.cargo_details}}
+                                   {%endif%}
+            
+                            </td>
+                </tr>
+    
+        </table>
+
+        
+    <div style="position:relative;height:640px;background: #f5f5f5;">
+    
+    <table border="1" width="100%">
+            <thead>
+    
+    
+                <tr>
+                    <td id ="headtd" style="width:45%;font-size:10px;text-align:center;text-transform: uppercase;"><b>Description<br>البند  </b></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:center;text-transform: uppercase;"><b>Net Amount<br>صافي القيمة</b></td>
+                    <td id ="headtd" style="width:10%;font-size:10px;text-align:center;text-transform: uppercase;"><b>VAT %<br>نسبة الضريبة</b></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:center;text-transform: uppercase;"><b>VAT Val<br>قيمة الضريبة</b></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:center;text-transform: uppercase;"><b>Gross Amount<br>أجمالي القيمة</b></td>
+                </tr>
+                
+            </thead>    
+            
+            <!-- {% set total_vat_amount=[0]%} -->
+            {% set total_gross_amount=[0]%}
+                {%- for row in doc.items -%}
+            <!-- item row -->
+            <tr>
+                <td style="width: 45%;font-size:9px;text-align:left;word-wrap: break-word;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+                        <div id="word-wrap" style="width:100%;">
+                        {{ row.description }}</div>
+                </td>
+                <td style="width: 15%;font-size:9px;text-align:right;text-align:right;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">{{row.amount}}</td>
+                <td style="width: 10%;font-size:9px;text-align:right;text-align:right;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+                    {% if row.tax_rate%}
+                        {{row.tax_rate}}
+                    {%endif%}   
+                </td>
+                <td style="width: 15%;font-size:9px;text-align:right;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+                    {% set amt = [0] %}
+                    {% if row.tax_amount%}
+                     {{row.tax_amount}}
+                     {% set __= amt.append(amt.pop()+row.tax_amount) %}  
+    
+                    {%endif%}
+                    
+                    {% set total=amt[0]+row.amount%}
+                    
+                   
+                    {% if amt[0] == 0 %} 
+                    {{ frappe.utils.fmt_money(amt[0]) }}
+                    {%endif%}
+            
+                    {% set __=total_gross_amount.append(total_gross_amount.pop() + total)%}
+                </td>
+                <td style="width: 15%;font-size:9px;text-align:right;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+                    {{ '%0.2f' %total }}
+                     </td>
+    
+            </tr>
+    
+            {% if (row.page_break or loop.index % _autoPagebreakItemsCount == 0) -%}
+        {% if(row.page_break or loop.index < doc.items|count ) %} {#Skip Last item Page break#} {% set __=pageNo.append(pageNo.pop() + 1)
+            %} 
+        </table>
+    </div>
+    <div class="page-break"></div>
+    {% set lh = frappe.form_dict.no_letterhead %}
+        {% if lh|int ==0 %}
+        <div  style="font-size:12px;float: right;padding-top: 100px;"><b> Page {{ pageNo[pageNo|count - 1]  }} of {{  _totalNoPages  }} </b></div>
+         {%endif%} 
+    <table width="100%" border="1">
+            <tr>
+                <td width = "60%" rowspan="6"><h4><center><b>SALES INVOICE /فاتورة مبيعات</b></center></h4><BR>
+                   
+                        <!-- <label id="headtd"> Bill To</label> <br> -->
+                        <div style="width: 30%;background:gray;color:white;font-size: 15px;">Bill To<br>أسم المفوتر</div>
+                    
+                    <div style="width:50%;float:left;">
+                        <b>{{doc.customer}}</b><br>
+                        <b style="word-wrap:break-word;">
+                                {% if frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic')!=None %}
+                                    {{ frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic') }}
+                                {% endif %}
+                        </b><br>
+                        {% if doc.address_display %}
+                            {{doc.address_display}}
+                        {%endif%}
+        
+                    </div>
+                    <div style="width:50%;float:right;">
+                            VAT REG.# &nbsp;&nbsp;&nbsp;{% if frappe.db.get_value('Customer', doc.customer, 'tax_id')!=None %}
+                            {{ frappe.db.get_value('Customer', doc.customer, 'tax_id') }}
+                            {% endif %}
+            
+                        </div>
+            
+                
+                </td>
+                <td width="40%" colspan="2" id="headtd">
+                        <b>CR No.&nbsp;&nbsp;&nbsp;</b><br>
+                    
+                    <b>VAT REG.# </b>:&nbsp&nbsp{% if frappe.db.get_value('Company', doc.company, 'tax_id')!=None %}
+                        {{ frappe.db.get_value('Company', doc.company, 'tax_id') }}
+                        {% endif %}
+                    <br>رقم التسجيل بضريبة القيمة المضافة </td>
+                
+            </tr>
+            <tr>
+                <td id="headtd" width="20%"><center><b>INVOICE NO</b> <br>رقم الفاتورة</center></td>
+                <td  width="20%" id="headtd"><center><b>DATE<br>تاريخ الفاتورة</b></center></td>    
+            </tr>
+            <tr>
+                <td  width="20%"><center>{{doc.name}}</center></td>
+                <td  width="20%"><center>{{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}</center></td>
+            </tr>
+            <tr>
+                <td id="headtd" width="20%"><center><b>CURRENCY<br>نوع العملة</b></cennter></td>
+                <td  width="20%" id="headtd"><center><b>TERMS<br>شروط السداد</b></center></td>    
+            </tr>
+            <tr>
+                <td  width="20%"><center>{{doc.currency}}</center></td>
+                <td  width="20%"><center>
+                    {%if doc.payment_terms_template%}
+                    {{ doc.payment_terms_template }}
+                {%endif%}</center></td>
+            </tr>
+            <tr>
+                <td width="20%" id="headtd"><b> OUR REF NO :</b></td>
+                <td width="20%"><b>{%if doc.project%}
+                        {{ doc.project }}
+                    {%endif%}</b></td>
+            </tr>
+            <tr>
+             
+        
+        
+            </tr>
+        </table>
+        <table border="1" width="100%">
+                <tr>
+                    <td colspan="4"> <center><b>SHIPPING DETAILS<br>بيانات الشحن</b></center>
+    
+                    </td>
+                </tr>
+                <tr>
+                    <td width="20%" id="headtd"><b>Shipper #<br>أسم الشاحن</b>
+    
+                    </td>
+                    <td width="30%"><b>{%if doc.shipper%}{{doc.shipper}}{%endif%}</b>
+    
+                    </td>
+                
+                        <td width="20%" id="headtd"><b>Consignee #<br>أسم المستلم</b>
+        
+                        </td>
+                        <td width="30%" ><b>
+                            {%if doc.consignee%}
+                             {{doc.consignee}}
+                            {%endif%}
+                        </b>
+        
+                        </td>
+                </tr>
+                <tr>
+                            <td width="20%" id="headtd"><b>VSL / Airline<br>أسم الباخرة/خط الطيران</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.vsl_or_airline_%}
+                                    {{doc.vsl_or_airline_}}
+                                   {%endif%}
+            
+                            </td>
+                
+                        <td width="20%" id="headtd"><b>Voy / Flt  #</b>
+        
+                        </td>
+                        <td width="30%"> 
+                                {% if doc.voy_flt %}
+                                {{doc.voy_flt}}
+                                {%endif%}
+                        </td>
+                    </tr>
+                    <tr>
+                            <td width="20%" id="headtd"><b>Port of  Loading<br>ميناء التحميل</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.port_of__loading_%}
+                                    {{doc.port_of__loading_}}
+                                   {%endif%}
+            
+                            </td>
+                        
+                                <td width="20%" id="headtd"><b>Port of Destination<br>ميناء الوصول</b>
+                
+                                </td>
+                                <td width="30%"> {%if doc.port_of_destination_%}
+                                        {{doc.port_of_destination_}}
+                                       {%endif%}
+                
+                                </td>
+                    </tr>
+                   
+                    <tr>
+                            <td width="20%" id="headtd"><b>E.T.D.<br>تاريخ المغادرة</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.etd%}
+                                    {{doc.etd}}
+                                   {%endif%}
+            
+                            </td>
+                        
+                                <td width="20%" id="headtd"><b>E.T.A.<br>تاريخ الوصول</b>
+                
+                                </td>
+                                <td width="30%"> {%if doc.eta%}
+                                        {{doc.eta}}
+                                       {%endif%}
+                
+                                </td>
+                    </tr>
+                    <tr>
+                            <td width="20%" id="headtd"><b>MBL / MAWB #<br>رقم البوليصة/بحري-جوي</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.mbl_or_mawb_%}
+                                    {{doc.mbl_or_mawb_}}
+                                   {%endif%}
+            
+                            </td>
+                        
+                                <td width="20%" id="headtd"><b>HBL / HAWB #<br>رقم البوليصة</b>
+                
+                                </td>
+                                <td width="30%"> {%if doc.hbl_or_hawb%}
+                                        {{doc.hbl_or_hawb}}
+                                       {%endif%}
+                
+                                </td>
+                    </tr>
+                    <tr>
+                            <td width="20%" id="headtd"><b>TYPE OF SHPT<br>نوع الشحنة</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.type_of_shpt_%}
+                                    {{doc.type_of_shpt_}}
+                                   {%endif%}
+            
+                            </td>
+                        
+                                <td width="20%" id="headtd"><b>CARGO DETAILS<br>تفاصيل الطرود</b>
+                
+                                </td>
+                                <td width="30%"> {%if doc.cargo_details%}
+                                        {{doc.cargo_details}}
+                                       {%endif%}
+                
+                                </td>
+                    </tr>
+    
+            </table>
+    <div style="position:relative;height:640px;background: #f5f5f5;"> 
+        
+    <table border="1" width="100%">
+            <thead>
+    
+    
+                <tr>
+                    <td id ="headtd" style="width:45%;font-size:10px;text-align:center;text-transform: uppercase;"><b>Description<br>البند</b></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:center;text-transform: uppercase;"><b>Net Amount<br>صافي القيمة</b></td>
+                    <td id ="headtd" style="width:10%;font-size:10px;text-align:center;text-transform: uppercase;"><b>VAT %<br>نسبة الضريبة</b></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:center;text-transform: uppercase;"><b>VAT Val<br>قيمة الضريبة</b></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:center;text-transform: uppercase;"><b>Gross Amount<br>أجمالي القيمة</b></td>
+                </tr>
+            </thead> 
+            {%- endif %}
+            {%- endif %}
+    
+            {%- endfor -%}
+        </table>
+    
+    
+    
+        {% if doc.items|count%_autoPagebreakItemsCount > 12 or doc.items|count%_autoPagebreakItemsCount ==0 -%}
+    
+    </div>
+    <div class="page-break"></div>
+    <table width="100%" border="1">
+            <tr>
+                <td width = "60%" rowspan="6"><h4><center><b>SALES INVOICE /فاتورة مبيعات</b></center></h4><BR>
+                   
+                        <!-- <label id="headtd"> Bill To</label> <br> -->
+                        <div style="width: 30%;background:gray;color:white;font-size: 15px;">Bill To<br>أسم المفوتر</div>
+                    
+                    <div style="width:50%;float:left;">
+                        <b>{{doc.customer}}</b><br>
+                        <b style="word-wrap:break-word;">
+                                {% if frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic')!=None %}
+                                    {{ frappe.db.get_value('Customer', doc.customer, 'customer_name_in_arabic') }}
+                                {% endif %}
+                        </b><br>
+                        {% if doc.address_display %}
+                            {{doc.address_display}}
+                        {%endif%}
+        
+                    </div>
+                    <div style="width:50%;float:right;">
+                            VAT REG.# &nbsp;&nbsp;&nbsp;{% if frappe.db.get_value('Customer', doc.customer, 'tax_id')!=None %}
+                            {{ frappe.db.get_value('Customer', doc.customer, 'tax_id') }}
+                            {% endif %}
+            
+                        </div>
+            
+                
+                </td>
+                <td width="40%" colspan="2" id="headtd"> <b>VAT REG.# </b>:&nbsp&nbsp{% if frappe.db.get_value('Company', doc.company, 'tax_id')!=None %}
+                        {{ frappe.db.get_value('Company', doc.company, 'tax_id') }}
+                        {% endif %}
+                    <br>رقم التسجيل بضريبة القيمة المضافة </td>
+                
+            </tr>
+            <tr>
+                <td id="headtd" width="20%"><center><b>INVOICE NO</b> <br>رقم الفاتورة</center></td>
+                <td  width="20%" id="headtd"><center><b>DATE<br>تاريخ الفاتورة</b></center></td>    
+            </tr>
+            <tr>
+                <td  width="20%"><center>{{doc.name}}</center></td>
+                <td  width="20%"><center>{{ frappe.utils.get_datetime(doc.posting_date).strftime("%d/%m/%Y") }}</center></td>
+            </tr>
+            <tr>
+                <td id="headtd" width="20%"><center><b>CURRENCY<br>نوع العملة</b></cennter></td>
+                <td  width="20%" id="headtd"><center><b>TERMS<br>شروط السداد</b></center></td>    
+            </tr>
+            <tr>
+                <td  width="20%"><center>{{doc.currency}}</center></td>
+                <td  width="20%"><center>
+                        {%if doc.payment_terms_template %}
+                        {{ doc.payment_terms_template }}
+                        {%endif%}</center></td>
+            </tr>
+            <tr>
+                <td width="20%" id="headtd"><b> OUR REF NO :</b></td>
+                <td width="20%"><b>
+                    {%if doc.project%}
+                    {{ doc.project }}
+                {%endif%}</b></td>
+            </tr>
+            <tr>
+             
+        
+        
+            </tr>
+        </table>
+        <table border="1" width="100%">
+                <tr>
+                    <td colspan="4"> <center><b>SHIPPING DETAILS<br>بيانات الشحن</b></center>
+    
+                    </td>
+                </tr>
+                <tr>
+                    <td width="20%" id="headtd"><b>Shipper #<br>أسم الشاحن</b>
+    
+                    </td>
+                    <td width="30%"><b>{%if doc.shipper%}{{doc.shipper}}{%endif%}</b>
+    
+                    </td>
+                
+                        <td width="20%" id="headtd"><b>Consignee #<br>أسم المستلم</b>
+        
+                        </td>
+                        <td width="30%"><b>
+                            {%if doc.consignee%}
+                             {{doc.consignee}}
+                            {%endif%}
+                        </b>
+        
+                        </td>
+                </tr>
+                <tr>
+                            <td width="20%" id="headtd"><b>VSL / Airline<br>أسم الباخرة/خط الطيران</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.vsl_or_airline_%}
+                                    {{doc.vsl_or_airline_}}
+                                   {%endif%}
+            
+                            </td>
+                
+                        <td width="20%" id="headtd"><b>Voy / Flt  #</b>
+        
+                        </td>
+                        <td width="30%"> 
+                            {% if doc.voy_flt %}
+                                {{doc.voy_flt}}
+                                {%endif%}
+        
+                        </td>
+                    </tr>
+                    <tr>
+                            <td width="20%" id="headtd"><b>Port of  Loading<br>ميناء التحميل</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.port_of__loading_%}
+                                    {{doc.port_of__loading_}}
+                                   {%endif%}
+            
+                            </td>
+                        
+                                <td width="20%" id="headtd"><b>Port of Destination<br>ميناء الوصول</b>
+                
+                                </td>
+                                <td width="30%"> {%if doc.port_of_destination_%}
+                                        {{doc.port_of_destination_}}
+                                       {%endif%}
+                
+                                </td>
+                    </tr>
+                   
+                    <tr>
+                            <td width="20%" id="headtd"><b>E.T.D.<br>تاريخ المغادرة</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.etd%}
+                                    {{doc.etd}}
+                                   {%endif%}
+            
+                            </td>
+                        
+                                <td width="20%" id="headtd"><b>E.T.A.<br>تاريخ الوصول</b>
+                
+                                </td>
+                                <td width="30%"> {%if doc.eta%}
+                                        {{doc.eta}}
+                                       {%endif%}
+                
+                                </td>
+                    </tr>
+                    <tr>
+                            <td width="20%" id="headtd"><b>MBL / MAWB #<br>رقم البوليصة/بحري-جوي</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.mbl_or_mawb_%}
+                                    {{doc.mbl_or_mawb_}}
+                                   {%endif%}
+            
+                            </td>
+                        
+                                <td width="20%" id="headtd"><b>HBL / HAWB #<br>رقم البوليصة</b>
+                
+                                </td>
+                                <td width="30%"> {%if doc.hbl_or_hawb%}
+                                        {{doc.hbl_or_hawb}}
+                                       {%endif%}
+                
+                                </td>
+                    </tr>
+                    <tr>
+                            <td width="20%" id="headtd"><b>TYPE OF SHPT<br>نوع الشحنة</b>
+            
+                            </td>
+                            <td width="30%"> {%if doc.type_of_shpt_%}
+                                    {{doc.type_of_shpt_}}
+                                   {%endif%}
+            
+                            </td>
+                        
+                                <td width="20%" id="headtd"><b>CARGO DETAILS<br>تفاصيل الطرود</b>
+                
+                                </td>
+                                <td width="30%"> {%if doc.cargo_details%}
+                                        {{doc.cargo_details}}
+                                       {%endif%}
+                
+                                </td>
+                    </tr>
+    
+            </table>
+        <div style="position:relative; height:370px;">
+    
+                {%-endif%}
+    <div style="position: absolute; bottom: 0; width: 100%;">
+    
+    <table border="1" width="100%">
+            <tr>
+                    <td id ="headtd" style="width:45%;font-size:10px;text-align:right;text-transform: uppercase;"><b>Sub Total<br>صافي القيمة</b></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:right;text-transform: uppercase;"><b>
+                        {% set amount ='%0.2f' % doc.items|sum(attribute='amount') %}
+                        {{ frappe.utils.fmt_money(amount,currency=doc.currency) }}
+                    </b></td>
+                    <td id ="headtd" style="width:10%;font-size:10px;text-align:right;text-transform: uppercase;"></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:right;text-transform: uppercase;"><b>
+                        {% set tax_amount = '%0.2f' % doc.items|sum(attribute='tax_amount') %}
+                        {{ frappe.utils.fmt_money(tax_amount,currency=doc.currency) }}
+                    </b></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:right;text-transform: uppercase;"><b>
+                        
+                        {% set total_g_amt = '%0.02f'% total_gross_amount[0] %}
+                        {{ frappe.utils.fmt_money(total_g_amt,currency=doc.currency) }}
+                    </b></td>
+            </tr>
+    
+           
+            <tr>
+                    <td id ="headtd" style="width:45%;font-size:10px;text-align:right;text-transform: uppercase;"><b>Less Advance<br>مبلغ السداد المقدم</b></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:right;text-transform: uppercase;"><b>{{ frappe.utils.fmt_money(0.00,currency=doc.currency) }}</b></td>
+                    <td id ="headtd" style="width:10%;font-size:10px;text-align:right;text-transform: uppercase;"></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:right;text-transform: uppercase;"><b>{{ frappe.utils.fmt_money(0.00,currency=doc.currency) }}</b></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:right;text-transform: uppercase;"><b>{{ frappe.utils.fmt_money(0.00,currency=doc.currency) }}</b>
+                       </td>
+            </tr>
+            <tr>
+                    <td id ="headtd" style="width:45%;font-size:10px;text-align:right;text-transform: uppercase;"><b>Grand Total<br>أجمالي قيمة الفاتورة</b></td>
+                    <!-- <td id ="headtd" style="width:15%;font-size:10px;text-align:right;text-transform: uppercase;"><b>{{ doc.get_formatted("grand_total")}}</b></td> -->
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:right;text-transform: uppercase;"><b>
+                        {% set grand_total = '%0.2f' % doc.items|sum(attribute='amount') %}
+                        {{ frappe.utils.fmt_money(grand_total,currency=doc.currency) }}
+                    </b></td>
+                    <td id ="headtd" style="width:10%;font-size:10px;text-align:right;text-transform: uppercase;"></td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:right;text-transform: uppercase;"> {% set vat_amt = [0] %}
+                            {%- for row in doc.taxes -%} 
+                                {% set d = "VAT 5% -" %} 
+                                {% if d in row.account_head -%}
+                                    <b>{{row.get_formatted("tax_amount")}}</b>
+                                    {% set __= vat_amt.append(vat_amt.pop()+row.tax_amount) %}  
+                           
+                                {%- endif -%}                  
+                            {%- endfor -%}
+                           
+                            {% if vat_amt[0] == 0 %} 
+                            <b>{{ frappe.utils.fmt_money(vat_amt[0],currency=doc.currency) }}</b>
+                            {%endif%}</td>
+                    <td id ="headtd" style="width:15%;font-size:10px;text-align:right;text-transform: uppercase;"><b>{{ frappe.utils.fmt_money(total_gross_amount[0],currency="ر.س") }}</b></td>
+            </tr>
+            <tr>
+                <td id = "headtd" colspan="5">
+                    <div id = "headtd" style="border: thin;width:7%;float: left"><b>In Words:</b></div>
+                    <div style="width:93%;float:left;"> <b>{{ doc.get_formatted("in_words") }}</b></div>
+                </td>
+               
+            </tr>
+            <tr>
+                    <td id = "headtd" colspan="5">
+                        
+                        <div style="width:100%;float:left;"> <center><b>Please Remit Your Payment To:&nbsp;&nbsp;&nbsp;{{doc.company}}<br>
+                            نأمل منكم تحويل السداد الي : شركة الدعم الأولي  المحدودة</b></center></div>
+                    </td>
+                   
+            </tr>
+            <tr>
+                    <td id = "headtd" colspan="5">
+                        
+                        <div style="width:100%;float:left;"> <center><b><u>BANK ACCOUNT DETAILS:</u></b></center></div>
+                        <div style="width:100%;text-align: left;text-transform: uppercase;"><b><center>{%if doc.bank%}{{doc.bank}}{%endif%}&nbsp;-ACCOUNT NUMBER:&nbsp;&nbsp;{%if doc.account_number%}{{doc.account_number}}{%endif%}&nbsp;&nbsp;- IBAN #{%if doc.iban_number%}{{doc.iban_number}}{%endif%}</center></b></div>
+                    </td>
+                   
+            </tr>
+    
+        </table>
+    </table>        
+    </div>

@@ -1,0 +1,136 @@
+<style>
+    #offer_term
+    {
+        font-style: 14px;
+       
+    }
+</style>
+
+<h2><center><b><u>Job Offer</u></b></center></h2>
+<div style="padding-top:40px;">
+     
+    <p style="font-size: 15px;">
+            <b style="font-size:17px">{{doc.company}}</b> is pleased to select you to be one of its team in the Kingdom of {{doc.location}}, you will assume the position of <b style="font-size: 17px;">"{{doc.designation}}"</b>, and the offer shall be effective as of 
+            <b style="font-size:14px">{{ frappe.utils.get_datetime(doc.offer_date).strftime(" %d %B %Y").lstrip("0")  }}</b>.
+    </p>
+
+</div>
+
+<div style="padding-top:20px;">
+    <b style="font-size: 17px;text-decoration: underline;">Clarifications:</b> 
+<h6 style="font-size: 15px;margin-left: 45px;">Your compensation and benefits (Single Status) per month will be as follows: </h6>
+<table width= "100%">
+        {%- for row in doc.offer_terms -%}
+    <tr>
+        <td id = "offer_term" width="6%"></td>
+        <td id = "offer_term" width="3%">{{row.idx}}.</td>
+        <td id = "offer_term"  width="25%">{{row.offer_term}}</td>
+        <td id = "offer_term" width="59%">:&nbsp;&nbsp;{{row.value}}</td>
+    </tr>
+    {%- endfor -%}
+</table>
+                        
+</div>
+
+<div>
+       <b style="font-size: 17px;text-decoration: underline;"> Note 1:</b>
+            <p  style="font-size: 12px;padding-left:20px;">
+                    <b style="font-size:17px;">{{doc.company}}</b> can terminate this job offer during the probationary period, if found not suitable to the assigned job.
+                
+            </p>
+            <p  style="font-size: 12px;padding-left:20px;">
+                    If you agree to this Job offer, please confirm your acceptance no later than <b style="font-size:14px;">{{ frappe.utils.get_datetime(doc.offer_date).strftime(" %d %B %Y").lstrip("0")  }}</b>
+                
+            </p>
+            
+          
+            {%  if doc.terms and doc.terms|striptags|length >0 %}
+            
+                <h4 style="font-size: 14px;padding-left:20px;">Other Terms:</h4>
+                <div style="font-size: 12px;padding-left:45px;">
+                    {%  if doc.terms %}
+                    <p>{{doc.terms}}</p>
+                    {% endif %}
+                   
+                
+                </div> 
+               
+                
+           
+          
+           {% endif %}
+           
+             
+           
+            
+            
+                    
+            </p>
+            
+</div>
+
+<div style=" padding-top: 40px;">
+    <div style="width:100%;float:left">
+        <div style="width:50%;float:left;">
+            <div style="width:30%;float:left;font-size:12px;"><b>HR Manager</b></div>
+            <div style="width:3%;float:left;font-size:12px;">:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+            <div style="width:67%;float: right;font-size:12px;">  {{ doc.hr_name }}</div>
+        </div>
+        <div style="width:50%;float:right;">
+                <div style="width:30%;float:left;font-size:12px;"><b>Employee Name</b></div>
+                <div style="width:3%;float:left;font-size:12px;">:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                <div style="width:67%;float: right;font-size:12px;">{{doc.applicant_name}}</div>
+        </div>
+    </div>
+    <div style="width:100%;float:left">
+        <div style="width:50%;float:left;">
+            <div style="width:30%;float:left;font-size:12px;padding-top: 10px;"><b>Date</b></div>
+            <div style="width:3%;float:left;font-size:12px;padding-top: 10px;">:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+            <div style="width:67%;float: right;font-size:12px;padding-top: 10px;">{{ frappe.utils.get_datetime(doc.offer_date).strftime(" %d-%m-%Y ")  }}</div>
+        </div>
+           
+            <div style="width:50%;float:right;">
+                    <div style="width:40%;float:left;font-size:12px;padding-top: 10px;"><b>Proposal Approval(Y/N)</b></div>
+                    <div style="width:3%;float:left;font-size:12px;padding-top: 10px;"><b>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></div>
+                    <div style="width:57%;float: right;font-size:12px;padding-top: 10px;"></div>
+            </div>
+    </div>
+   
+</div>
+<div style="padding-top:60px;">
+        <div style="width:100%;float:left">
+            <div style="width:50%;float:left;">
+                <div style="width:30%;float:left;font-size:12px;"><b>Signature</b></div>
+                <div style="width:3%;float:left;font-size:12px;"><b>:</b></div>
+                <div style="width:47%;float: left;font-size:12px;border-bottom: 1px solid black;padding-top: 10px;">&nbsp;</div>
+
+        </div>
+              
+                <div style="width:50%;float:right;">
+                        <div style="width:20%;float:left;font-size:12px;"><b>Date</b></div>
+                        <div style="width:3%;float:left;font-size:12px;"><b>:</b></div>
+                        <div style="width:47%;float: left;font-size:12px;border-bottom: 1px solid black;padding-top: 10px;">&nbsp;</div>
+
+                </div>
+        </div>
+      
+</div>
+<div style="padding-top:45px;">
+        <div style="width:100%;float:left">
+                <div style="width:50%;float:left;">
+                    <div style="width:30%;float:left;font-size:12px;"></div>
+                    <div style="width:3%;float:left;font-size:12px;"></div>
+                    <div style="width:67%;float: right;font-size:12px;"></div>
+                </div>
+                <div style="width:50%;float:right;">
+                        <div style="width:20%;float:left;font-size:12px;"><b>Signature</b></div>
+                        <div style="width:3%;float:left;font-size:12px;"><b>:</b></div>
+                        <div style="width:47%;float: left;font-size:12px;border-bottom: 1px solid black;padding-top: 10px;">&nbsp;</div>
+
+                </div>
+        </div>
+      
+</div>
+
+  
+</div>
